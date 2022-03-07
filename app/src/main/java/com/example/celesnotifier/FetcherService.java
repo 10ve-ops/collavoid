@@ -215,7 +215,7 @@ public class FetcherService extends Service {
                             "connection then restart the service...");
             }
         }, 500,delay_bw_queries);
-        return super.onStartCommand(intent, flags, startId);
+        return Service.START_STICKY;
     }
 
     @Override
