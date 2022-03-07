@@ -1,0 +1,33 @@
+<resources>
+    <string name="app_name">CelesNotifier</string>
+    <!-- Settings Activity Title -->
+    <string name="title_activity_settings">Settings</string>
+
+    <!-- Preference Titles -->
+    <string name="messages_header">Messages</string>
+    <string name="sync_header">Sync</string>
+
+    <!-- Messages Preferences -->
+    <string name="signature_title">Your signature</string>
+    <string name="reply_title">Default reply action</string>
+
+    <!-- Service Preferences -->
+    <string name="service_header">Service</string>
+    <string name="service_status_key">serviceStatus</string>
+    <string name="sms_notif_key">sms_notif</string>
+    <string name="service_status">Service Status</string>
+    <string name="sms_notification_title">SMS Notifications</string>
+    <string name="sms_notification_summary_on">Show sent SMS notification
+    </string>
+    <string name="sms_notification_summary_off">Don\'t show sent SMS notification</string>
+    <string name="lastUpdated_time">last_update_time</string>
+    <string name="dateNTimeFormat">yyyy MMM dd HH:mm</string>
+    <string name="fetched_prss_norad_k">prss_norad</string>
+    <string name="fetched_max_prob_k">max_prob</string>
+    <string name="fetched_min_range_k">min_range</string>
+    <string name="fetched_rel_vel_k">rel_velocity</string>
+    <string name="fetched_deb_norad_k">deb_norad</string>
+    <string name="fetched_deb_name_k">deb_name</string>
+    <string name="fetched_min_range_time_k">min_range_time</string>
+
+</resources>
