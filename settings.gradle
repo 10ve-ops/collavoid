@@ -1,2 +1,6 @@
+<<<<<<< HEAD
 include ':app'
+=======
+include ':app'
+>>>>>>> 3c96f1147418f2d743b27eac4a7fe5c4f631fa80
 rootProject.name = "CelesNotifier"
