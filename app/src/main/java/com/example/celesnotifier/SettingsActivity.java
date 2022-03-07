@@ -70,9 +70,6 @@ public class SettingsActivity extends AppCompatActivity {
     Intent svc_intent;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        SmsManager smsManager = SmsManager.getDefault();
-        Log.e(TAG,"sending SMS");
-        smsManager.sendTextMessage("+923342576758", null, "A short message!", null,null);
         sendQueryBroadcast();
         IntentFilter filter = new IntentFilter("com.example.celesnotifier.FETCHER_SERVICE");
         this.registerReceiver(br, filter);

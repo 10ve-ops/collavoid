@@ -45,7 +45,7 @@ public class FetcherService extends Service {
     private static boolean activity_is_alive = false;
     private static final ArrayList<String> numbrs = new ArrayList<String>();
     private static boolean sms_notif_status = false;
-    private static final long delay_bw_queries = TimeUnit.MINUTES.toMillis(1); //10 minutes approx
+    private static final long delay_bw_queries = TimeUnit.MINUTES.toMillis(10); //10 minutes approx
     public static final float yello_warn_thresh = 3.0e-5f, red_warn_thresh = 1.0e-4f, yellow_min_range = 2.0f, red_min_range = 0.5f;
     public static String msg = "*IMPORTANT MESSAGE*\n As of current celestrak data, this is to inform " +
             "(COLOR) warning of possible collision of PRSS with (DEB). Having probability = (PROB)" +
@@ -254,7 +254,7 @@ public class FetcherService extends Service {
             SmsManager smsManager = SmsManager.getDefault();
             Log.e(TAG,"sending SMS");
             for(String number: numbrs)
-            smsManager.sendTextMessage(number, null, msg, null, null);
+            smsManager.sendMultipartTextMessage(number, null, smsManager.divideMessage(msg), null, null);
         }
 
 
