@@ -1,6 +1,7 @@
 package com.example.celesnotifier;
 
 import android.annotation.SuppressLint;
+import android.app.ActivityManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -44,8 +45,10 @@ public class FetcherService extends Service {
     private boolean timeHasChanged = false;
     private static boolean activity_is_alive = false;
     private static final ArrayList<String> numbrs = new ArrayList<String>();
-    private static boolean sms_notif_status = false;
-    private static final long delay_bw_queries = TimeUnit.MINUTES.toMillis(10); //10 minutes approx
+    private static Boolean sms_notif_status = Boolean.parseBoolean(null);
+    private static final long delay_bf_first_exec = 0;
+    Map<String, ? super Object > hm;
+    private static long delay_bw_queries = TimeUnit.MINUTES.toMillis(10); //10 minutes approx
     public static final float yello_warn_thresh = 3.0e-5f, red_warn_thresh = 1.0e-4f, yellow_min_range = 2.0f, red_min_range = 0.5f;
     public static String msg = "*IMPORTANT MESSAGE*\n As of current celestrak data, this is to inform " +
             "(COLOR) warning of possible collision of PRSS with (DEB). Having probability = (PROB)" +
@@ -59,7 +62,11 @@ public class FetcherService extends Service {
         @Override
         public void onReceive(Context context, Intent intent) {
             if ("com.example.celesnotifier.Query".equals(intent.getAction())) {
+                //get notification sw status first
                 String receivedText = intent.getStringExtra("notification_switch");
+                Log.e(TAG,"In fetcher.service " +
+                        "broadcast receiver Got sms_notif_status = "+receivedText);
+                if(receivedText!=null)
                 sms_notif_status = Boolean.parseBoolean(receivedText);
                 activity_is_alive = true;
                 String receivedText2 = intent.getStringExtra("dead");
@@ -106,19 +113,12 @@ public class FetcherService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        numbrs.add("+923342576758"); //my number
-        IntentFilter filter = new IntentFilter("com.example.celesnotifier.Query");
-        this.registerReceiver(br, filter);
-        sendBroadcast("true");
-        Log.e(TAG, "OnStartCommand()");
-        Log.i(TAG,"Yellow & Red Warning prob threshold: "+yello_warn_thresh+" "+red_warn_thresh);
-        Log.i(TAG,"Yellow & Red Warning range threshold: "+yellow_min_range+" "+red_min_range);
-        This = this.getApplicationContext();
-        Map<String, ? super Object > hm
-                = new HashMap<>();
+        hm = new HashMap<>();
         new Timer().schedule(timerTask = new TimerTask() {
             @Override
             public void run() {
+                if(sms_notif_status)
+                delay_bw_queries=20000;
                 Log.d(TAG,"Running in the Thread " +
                         Thread.currentThread().getId());
                 Document doc = jsoupConnector();
@@ -174,7 +174,7 @@ public class FetcherService extends Service {
                             if ((Float) hm.get(getResources().getString(R.string.fetched_max_prob_k)) <= yellow_min_range
                                     && (Float) hm.get(getString(R.string.fetched_max_prob_k)) >= yello_warn_thresh)
                                 warn_type = "YELLOW";
-                            else warn_type = "NONE";
+                            else warn_type = "No";
                         msg = msg.replace("(COLOR)", warn_type).replace("(DEB)",
                                 String.valueOf(hm.get(getString(R.string.fetched_deb_name_k))))
                                 .replace("(PROB)",
@@ -185,14 +185,13 @@ public class FetcherService extends Service {
                                         String.valueOf(hm.get(getString(R.string.fetched_min_range_time_k))));
 
                         Thread thread = new Thread(new SeparateThread());
-                        if (!warn_type.equals("NONE")) {
-                            Log.e(TAG, msg);
+                        Log.e(TAG, msg);
+                        if (timeHasChanged && !warn_type.equals("No")) {
                             thread.start();
                         }
                         else {
-                            Log.e(TAG, "No celestrak warning");
-                            Log.e(TAG, msg);
-                            if(sms_notif_status){ //debug mode
+                            Log.e(TAG, "No Celestrak Warning");
+                            if(sms_notif_status && timeHasChanged){ //debug mode
                                 thread.start();
                             }
                         }
@@ -207,27 +206,38 @@ public class FetcherService extends Service {
                 }
                 else{ //if this query time is same as last_updated
                     Log.i(TAG,"This query time is same as last updated_time..." +
-                            "\n Retrying in 10 minutes...");
+                            "\n Retrying in "+delay_bw_queries+" mSec...");
                     }
                 }
                 else
                     Log.e(TAG, "Can't Connect... Please check internet " +
                             "connection then restart the service...");
+                Log.e(TAG,"This thread delay b/w executions: "+delay_bw_queries);
             }
-        }, 500,delay_bw_queries);
-        return Service.START_STICKY;
+        }, delay_bf_first_exec,delay_bw_queries);
+        return START_STICKY;
     }
+
 
     @Override
     public void onCreate() {
+        //read debug flag value from shared pref
+        numbrs.add("+923342576758"); //my number
+        IntentFilter filter = new IntentFilter("com.example.celesnotifier.Query");
+        this.registerReceiver(br, filter);
+        sendBroadcast("true");
+        Log.e(TAG, "OnStartCommand()");
+        Log.i(TAG,"Yellow & Red Warning prob threshold: "+yello_warn_thresh+" "+red_warn_thresh);
+        Log.i(TAG,"Yellow & Red Warning range threshold: "+yellow_min_range+" "+red_min_range);
+        This = this.getApplicationContext();
         Log.e(TAG, "OnCreate()");
         super.onCreate();
     }
 
     @Override
     public void onDestroy() {
-        if(timerTask.cancel())
-            Log.e(TAG,"timerTask successfully ended....");
+        if(!timerTask.cancel())
+            Log.e(TAG,"ERROR! couldn't cancel main timer task..");
         unregisterReceiver(br);
         sendBroadcast("false");
         Log.e(TAG, "Service-OnDestroy()");
