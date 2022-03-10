@@ -46,7 +46,8 @@ public class FetcherService extends Service {
     private Date date;
     private boolean timeHasChanged = false;
     //private static boolean activity_is_alive = false;
-    private static final ArrayList<String> numbrs = new ArrayList<String>();
+
+    private static final ArrayList<String> numbrs = new ArrayList<>();
     private static final long delay_bf_first_exec = 0;
     Map<String, ? super Object > hm;
     private static long delay_bw_queries = TimeUnit.MINUTES.toMillis(10),
@@ -224,12 +225,14 @@ public class FetcherService extends Service {
                     if ((Float) hm.get(getString(R.string.fetched_min_range_k)) <=
                             red_min_range && (Float) hm.get(getResources().getString(R.string.fetched_max_prob_k))>=red_warn_thresh)
                         warn_type = "RED";
-                    else //noinspection ConstantConditions
+                    else { //noinspection ConstantConditions
                         if ((Float) hm.get(getResources().getString(R.string.fetched_max_prob_k)) <= yellow_min_range
                                 && (Float) hm.get(getString(R.string.fetched_max_prob_k)) >= yello_warn_thresh)
                             warn_type = "YELLOW";
                         else warn_type = "No";
-                    msg = msg.replace("(COLOR)", warn_type).replace("(DEB)",
+                    }
+                    msg = msg.replace( "(COLOR)", warn_type.equals("No") ? "that there is no" :
+                            warn_type).replace("(DEB)",
                             String.valueOf(hm.get(getString(R.string.fetched_deb_name_k))))
                             .replace("(PROB)",
                                     String.valueOf(hm.get(getString(R.string.fetched_max_prob_k))))
@@ -273,7 +276,6 @@ public class FetcherService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         hm = new HashMap<>();
-
         new Timer().schedule(timerTask = new TimerTask() {
             @Override
             public void run() {
@@ -299,9 +301,6 @@ public class FetcherService extends Service {
             }
         };
         handler.postDelayed(runnable, delay_bw_long_queries);
-
-
-
         return START_STICKY;
     }
 
