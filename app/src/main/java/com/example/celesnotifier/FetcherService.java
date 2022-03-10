@@ -22,7 +22,11 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -55,6 +59,41 @@ public class FetcherService extends Service {
             ", minimum range = (RNG) km and impact time = (IM_TIME) UTC. \n Thanks & Regards, \n" +
             "M. Wajahat Qureshi\n AM(LSCS-K)";
 
+
+    public static void printLog(Context context){
+        String filename = context.getExternalFilesDir(null).getPath() + File.separator + "celesNotifier.log";
+        String command = "logcat -d *:V";
+
+        Log.d(TAG, "command: " + command);
+
+        try{
+            Process process = Runtime.getRuntime().exec(command);
+
+            BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String line;
+            try{
+                File file = new File(filename);
+                FileWriter writer = null;
+                if(file.createNewFile())
+                writer = new FileWriter(file);
+                else
+                    Log.e(TAG,"Overwriting old Log file...");
+                while((line = in.readLine()) != null && writer!=null){
+                    writer.write(line + "\n");
+                }
+                if(writer!=null) {
+                    writer.flush();
+                    writer.close();
+                }
+            }
+            catch(IOException e){
+                e.printStackTrace();
+            }
+        }
+        catch(IOException e){
+            e.printStackTrace();
+        }
+    }
 
     BroadcastReceiver br = new MyBroadcastReceiver();
     public class MyBroadcastReceiver extends BroadcastReceiver {
@@ -213,8 +252,11 @@ public class FetcherService extends Service {
                     Log.e(TAG, "Can't Connect... Please check internet " +
                             "connection then restart the service...");
                 Log.e(TAG,"This thread delay b/w executions: "+delay_bw_queries);
+                printLog(This); //flush log to a file
             }
+
         }, delay_bf_first_exec,delay_bw_queries);
+
         return START_STICKY;
     }
 
@@ -236,6 +278,7 @@ public class FetcherService extends Service {
 
     @Override
     public void onDestroy() {
+
         if(!timerTask.cancel())
             Log.e(TAG,"ERROR! couldn't cancel main timer task..");
         unregisterReceiver(br);
@@ -268,4 +311,9 @@ public class FetcherService extends Service {
         }
 
 
-}}
+}
+
+
+}
+
+
