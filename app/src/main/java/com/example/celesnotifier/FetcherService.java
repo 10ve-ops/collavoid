@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.IBinder;
 import android.telephony.SmsManager;
 import android.util.Log;
@@ -121,6 +122,20 @@ public class FetcherService extends Service {
     }
 
 
+    public boolean getDebugPrefVal(){
+        boolean debug = false;
+        try {
+            Context con = createPackageContext("com.example.celesnotifier", 0);
+            SharedPreferences pref = con.getSharedPreferences(
+                    getString(R.string.svc_status_prefFileName), Context.MODE_PRIVATE);
+            debug = pref.getBoolean(getString(R.string.svc_status_prefName), false);
+
+        } catch (PackageManager.NameNotFoundException e) {
+            Log.e("Not data shared", e.toString());
+        }
+        return debug;
+    }
+
     int connection_out_times = 1;
     private Document jsoupConnector() {
         try {
@@ -152,6 +167,7 @@ public class FetcherService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        SharedPreferences main_activity_pref = This.getSharedPreferences("com.example.celesnotifier", MODE_PRIVATE);
         hm = new HashMap<>();
         new Timer().schedule(timerTask = new TimerTask() {
             @Override
@@ -162,6 +178,7 @@ public class FetcherService extends Service {
                         Thread.currentThread().getId());
                 Document doc = jsoupConnector();
                 if (doc != null) {
+                    Log.i(TAG,"DEBUG VAL VALUE READED AS: "+getDebugPrefVal());
                     Elements links = doc.select("tr:not(.shade)");
                     links = links.select("tr:not(.header)");
                     Log.i(TAG, "Parsed html length = " + (links.indexOf(links.last()) + 1));

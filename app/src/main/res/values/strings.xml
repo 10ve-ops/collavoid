@@ -15,6 +15,10 @@
     <string name="service_header">Service</string>
     <string name="service_status_key">serviceStatus</string>
     <string name="sms_notif_key">sms_notif</string>
+    <string name="svc_status_prefFileName">kkasdugdjfvniuxasyfdsyfsdhfsncvisucicuad
+        bairsdfbxc</string>
+    <string name="svc_status_prefName">kkasdugdjfvniuxasyfdsy
+        sdfsdfshdbvbsdv1651sd16sd3s16sd33fsdhfsncvisucicuadbairsdfbxc</string>
     <string name="service_status">Service Status</string>
     <string name="sms_notification_title">SMS Notifications</string>
     <string name="sms_notification_summary_on">Show sent SMS notification

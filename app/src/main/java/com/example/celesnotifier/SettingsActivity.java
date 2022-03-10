@@ -78,6 +78,15 @@ public class SettingsActivity extends AppCompatActivity {
         return false;
     }
 
+    public void setDebugPrefVal(boolean val){
+        SharedPreferences my_pref = getSharedPreferences(getString(R.string.svc_status_prefFileName)
+            , MODE_PRIVATE); //forced deprecated use to avoid use of storage/db
+        SharedPreferences.Editor editor = my_pref.edit();
+        editor.putBoolean(getString(R.string.svc_status_prefName), val);
+        editor.apply();
+        Log.i(TAG,"Saved debu_pref val as: "+val);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         service_status = isMyServiceRunning(FetcherService.class);
@@ -96,6 +105,7 @@ public class SettingsActivity extends AppCompatActivity {
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
+        setDebugPrefVal(false); //try
         sendQueryBroadcast();
     }
 
@@ -150,10 +160,6 @@ public class SettingsActivity extends AppCompatActivity {
 
         Context svc_sw_cntxt, sms_notif_cntxt;
         Intent svc_intent;
-
-        private void toggleBoolPref(Preference pref){
-
-        }
 
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
