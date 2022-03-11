@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.telephony.SmsManager;
 import android.util.Log;
 
@@ -76,14 +77,15 @@ public class FetcherService extends Service {
                 if(file.createNewFile())
                 writer = new FileWriter(file);
                 else
-                    Log.e(TAG,"Overwriting old Log file...");
+                    Log.e(TAG,"Appending old Log file...");
                 while((line = in.readLine()) != null && writer!=null){
-                    writer.write(line + "\n");
+                    writer.write(line + "\n" + "\n");
                 }
                 if(writer!=null) {
                     writer.flush();
                     writer.close();
                 }
+                Log.i(TAG,"Log update successful!");
             }
             catch(IOException e){
                 e.printStackTrace();
@@ -92,7 +94,6 @@ public class FetcherService extends Service {
         catch(IOException e){
             e.printStackTrace();
         }
-        Log.i(TAG,"Log update to file ended...");
     }
 /*
     BroadcastReceiver br = new MyBroadcastReceiver();
@@ -285,7 +286,7 @@ public class FetcherService extends Service {
         else
             Log.e(TAG, "Can't Connect... Please check internet " +
                     "Retrying after "+ delay_bw_queries+"....");
-        printLog(This); //flush log to a file
+
     }
 
     @Override
@@ -295,11 +296,12 @@ public class FetcherService extends Service {
             @Override
             public void run() {
                mainTask();
+                printLog(This); //flush log to a file
             }
 
         }, delay_bf_first_exec,delay_bw_queries);
 
-        Handler handler = new Handler();
+        Handler handler = new Handler(Looper.getMainLooper());
         //a delayed task to rule out the probability of timerScheduler not working case
         Runnable runnable = new Runnable() {
             @Override
@@ -307,15 +309,17 @@ public class FetcherService extends Service {
                 try{
                     Log.e(TAG,"Running in BACKUP PROCEDURE....");
                     mainTask();
+                    printLog(This); //flush log to a file
                 }
                 catch(Exception e){
                     e.printStackTrace();
                     // added try catch block to be sure of uninterupted execution
                 }
-                handler.postDelayed(this, 10000);
+                handler.postDelayed(this, 5000);
             }
         };
-        handler.postDelayed(runnable, delay_bw_long_queries);
+        //handler.postDelayed(runnable, 5000);
+        handler.postDelayed(new Runnable(){public void run(){new Thread(runnable).start();}}, 5000);
         return START_STICKY;
     }
 
