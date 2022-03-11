@@ -53,7 +53,7 @@ public class FetcherService extends Service {
     private static long delay_bw_queries = TimeUnit.MINUTES.toMillis(10),
     delay_bw_long_queries = TimeUnit.MINUTES.toMillis(30);
     public static final float yello_warn_thresh = 3.0e-5f, red_warn_thresh = 1.0e-4f, yellow_min_range = 2.0f, red_min_range = 0.5f;
-    public static String msg = "*IMPORTANT MESSAGE*\n As of current celestrak data, this is to inform " +
+    public static String msg = "*IMPORTANT MESSAGE*\n As of current celestrak data (updated @ (UPDATE_TIME) UTC), this is to inform " +
             "(TYPE) warning of possible collision of PRSS with (DEB). Having probability = (PROB)" +
             ", minimum range = (RNG) km and impact time = (IM_TIME) UTC. \n Thanks & Regards, \n" +
             "M. Wajahat Qureshi\n AM(LSCS-K)";
@@ -252,6 +252,7 @@ public class FetcherService extends Service {
                                     String.valueOf(hm.get(getString(R.string.fetched_max_prob_k))))
                             .replace("(RNG)",
                                     String.valueOf(hm.get(getString(R.string.fetched_min_range_k))))
+                            .replace("(UPDATE_TIME)", updateTime)
                             .replace("(IM_TIME)",
                                     String.valueOf(hm.get(getString(R.string.fetched_min_range_time_k))));
 

@@ -34,4 +34,16 @@
 
     </PreferenceCategory>
 
+    <PreferenceCategory app:title="Miscellaneous">
+
+        <Preference
+            app:key="pref_static_field_key"
+            app:selectable="false"
+            app:persistent="false"
+            app:title="General info."
+            app:summary="Please be sure to kill the service before changing any parameters.
+And then restart after changing params."/>
+
+    </PreferenceCategory>
+
 </PreferenceScreen>
