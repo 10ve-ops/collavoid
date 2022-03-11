@@ -46,7 +46,7 @@ public class FetcherService extends Service {
     private Date date;
     private boolean timeHasChanged = false;
     //private static boolean activity_is_alive = false;
-
+    private static boolean send_sms2all = false;
     private static final ArrayList<String> numbrs = new ArrayList<>();
     private static final long delay_bf_first_exec = 0;
     Map<String, ? super Object > hm;
@@ -54,7 +54,7 @@ public class FetcherService extends Service {
     delay_bw_long_queries = TimeUnit.MINUTES.toMillis(30);
     public static final float yello_warn_thresh = 3.0e-5f, red_warn_thresh = 1.0e-4f, yellow_min_range = 2.0f, red_min_range = 0.5f;
     public static String msg = "*IMPORTANT MESSAGE*\n As of current celestrak data, this is to inform " +
-            "(COLOR) warning of possible collision of PRSS with (DEB). Having probability = (PROB)" +
+            "(TYPE) warning of possible collision of PRSS with (DEB). Having probability = (PROB)" +
             ", minimum range = (RNG) km and impact time = (IM_TIME) UTC. \n Thanks & Regards, \n" +
             "M. Wajahat Qureshi\n AM(LSCS-K)";
 
@@ -120,6 +120,20 @@ public class FetcherService extends Service {
         }
     }*/   //BRs commented out for future use
 
+
+    public String getsmsPriorityPrefVal(){
+        String priority = null;
+        try {
+            Context con = createPackageContext("com.example.celesnotifier", 0);
+            SharedPreferences pref = con.getSharedPreferences(
+                    getString(R.string.debug_status_prefFileName), Context.MODE_PRIVATE);
+            priority = pref.getString(getString(R.string.send_sharedPref_key), null);
+
+        } catch (PackageManager.NameNotFoundException e) {
+            Log.e("Not data shared", e.toString());
+        }
+        return priority;
+    }
     public boolean getDebugPrefVal(){
         boolean debug = false;
         try {
@@ -231,7 +245,7 @@ public class FetcherService extends Service {
                             warn_type = "YELLOW";
                         else warn_type = "No";
                     }
-                    msg = msg.replace( "(COLOR)", warn_type.equals("No") ? "that there is no" :
+                    msg = msg.replace( "(TYPE)", warn_type.equals("No") ? "that there is no" :
                             warn_type).replace("(DEB)",
                             String.valueOf(hm.get(getString(R.string.fetched_deb_name_k))))
                             .replace("(PROB)",
@@ -241,6 +255,7 @@ public class FetcherService extends Service {
                             .replace("(IM_TIME)",
                                     String.valueOf(hm.get(getString(R.string.fetched_min_range_time_k))));
 
+                    send_sms2all = getsmsPriorityPrefVal().equals(getString(R.string.send_all_key));
                     Thread thread = new Thread(new SendSMS_Thread());
                     Log.e(TAG, msg);
                     if (timeHasChanged && !warn_type.equals("No")) {
@@ -309,6 +324,7 @@ public class FetcherService extends Service {
     public void onCreate() {
         //read debug flag value from shared pref
         numbrs.add("+923342576758"); //my number
+        numbrs.add("+923333984507"); //uzair
         //IntentFilter filter = new IntentFilter("com.example.celesnotifier.Query");
         //this.registerReceiver(br, filter);
         //sendBroadcast("true");
@@ -348,11 +364,15 @@ public class FetcherService extends Service {
     }
 */
     public static class SendSMS_Thread implements Runnable {
-        public void run(){
+        public void run() {
             SmsManager smsManager = SmsManager.getDefault();
-            Log.e(TAG,"Dending SMS...");
-            for(String number: numbrs)
-            smsManager.sendMultipartTextMessage(number, null, smsManager.divideMessage(msg), null, null);
+            Log.e(TAG, "Dending SMS...");
+            if (send_sms2all) {
+                for (String number : numbrs)
+                    smsManager.sendMultipartTextMessage(number, null, smsManager.divideMessage(msg), null, null);
+            }
+            else
+                smsManager.sendMultipartTextMessage("+923342576758", null, smsManager.divideMessage(msg), null, null);
         }
 
 

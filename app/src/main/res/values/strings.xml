@@ -8,8 +8,12 @@
     <string name="sync_header">Sync</string>
 
     <!-- Messages Preferences -->
-    <string name="signature_title">Your signature</string>
-    <string name="reply_title">Default reply action</string>
+    <string name="signature_title">SMS Signature</string>
+    <string name="send_title">Default send action</string>
+    <string name="signature_key">signature45dfg1</string>
+    <string name="send_key">Default send action</string>
+    <string name="send_me_key">send 2 me only</string>
+    <string name="send_all_key">send all</string>
 
     <!-- Service Preferences -->
     <string name="service_header">Service</string>
@@ -29,6 +33,7 @@
     </string>
     <string name="sms_notification_summary_off">Don\'t show sent SMS notification</string>
     <string name="lastUpdated_time">last_update_time</string>
+    <string name="send_sharedPref_key">jkznxckznx545</string>
     <string name="dateNTimeFormat">yyyy MMM dd HH:mm</string>
     <string name="fetched_prss_norad_k">prss_norad</string>
     <string name="fetched_max_prob_k">max_prob</string>

@@ -12,6 +12,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.PersistableBundle;
+import android.preference.EditTextPreference;
 import android.telephony.SmsManager;
 import android.util.Log;
 import android.util.Printer;
@@ -20,6 +21,7 @@ import android.view.MenuItem;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.preference.ListPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 
@@ -63,13 +65,16 @@ public class SettingsActivity extends AppCompatActivity {
     }
         */
 
-    public static void setDebugPrefVal(Context appContxt , boolean val){
+    public static void setPrefVal(Context appContxt , Boolean val, String send_sms_val){
         SharedPreferences my_pref = appContxt.getSharedPreferences(appContxt.getString(R.string.debug_status_prefFileName)
             , MODE_PRIVATE);
         SharedPreferences.Editor editor = my_pref.edit();
+        if(val!=null)
         editor.putBoolean(appContxt.getString(R.string.debug_status_prefName), val);
+        else if(send_sms_val!=null)
+            editor.putString(appContxt.getString(R.string.send_sharedPref_key), send_sms_val);
         editor.apply();
-        Log.i(TAG,"Saved debu_pref val as: "+val);
+        Log.i(TAG,"debug status & send_sms priority values = "+val + send_sms_val);
     }
     public static boolean getServiceStatus(Context cntxt){
         boolean debug = false;
@@ -162,6 +167,8 @@ public class SettingsActivity extends AppCompatActivity {
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey);
+            ListPreference sms_send_pref = findPreference(getString(R.string.send_key));
+            Preference signature = findPreference(getString(R.string.signature_key));
             Preference svc_sw_pref = findPreference(getString(service_status_key));
             assert svc_sw_pref != null;
             svc_sw_cntxt = svc_sw_pref.getContext();
@@ -171,7 +178,7 @@ public class SettingsActivity extends AppCompatActivity {
             Preference sms_notif_pref = findPreference(getString(R.string.sms_notif_key));
             assert sms_notif_pref != null;
             sms_notif_pref.setOnPreferenceChangeListener((preference, newValue) -> {
-                setDebugPrefVal(svc_sw_cntxt, (boolean) newValue);
+                setPrefVal(svc_sw_cntxt, (boolean) newValue, null);
                 return true;
             });
             svc_sw_pref.setOnPreferenceChangeListener((preference, newValue) -> {
@@ -188,8 +195,28 @@ public class SettingsActivity extends AppCompatActivity {
             });
             SharedPreferences sms_notif_sharedPref = sms_notif_pref.getSharedPreferences();
             boolean val = sms_notif_sharedPref.getBoolean(getString(sms_notif_key), false);
-            setDebugPrefVal(svc_sw_cntxt,val
-                    );
+            setPrefVal(svc_sw_cntxt,val, null);
+
+            assert sms_send_pref != null;
+            setPrefVal(svc_sw_cntxt,null,sms_send_pref.getValue());
+
+            assert signature != null;
+
+            SharedPreferences sign_sharedPref = signature.getSharedPreferences();
+            SharedPreferences.Editor sign_editor = sign_sharedPref.edit();
+            if(sign_sharedPref.getString(getString(R.string.signature_key), null) == null) {
+
+                sign_editor.putString(getString(R.string.signature_key), FetcherService.msg);
+                //setting default signature
+                sign_editor.apply();
+            }
+            signature.setOnPreferenceChangeListener((preference, newValue) -> {
+                //getting user modified signature
+                FetcherService.msg = (String) newValue;
+                sign_editor.putString(getString(R.string.signature_key), FetcherService.msg);
+                return true;
+            });
+
         }
 
 
