@@ -6,9 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.os.Handler;
 import android.os.IBinder;
-import android.os.Looper;
 import android.telephony.SmsManager;
 import android.util.Log;
 
@@ -48,6 +46,7 @@ public class FetcherService extends Service {
     private boolean timeHasChanged = false;
     //private static boolean activity_is_alive = false;
     private static boolean send_sms2all = false;
+    long timerTaskCount = 0;
     private static final ArrayList<String> numbrs = new ArrayList<>();
     private static final long delay_bf_first_exec = 0;
     Map<String, ? super Object > hm;
@@ -142,7 +141,6 @@ public class FetcherService extends Service {
             SharedPreferences pref = con.getSharedPreferences(
                     getString(R.string.debug_status_prefFileName), Context.MODE_PRIVATE);
             debug = pref.getBoolean(getString(R.string.debug_status_prefName), false);
-
         } catch (PackageManager.NameNotFoundException e) {
             Log.e("Not data shared", e.toString());
         }
@@ -186,90 +184,94 @@ public class FetcherService extends Service {
             return false;
     }
 
-    void mainTask(){
+
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
         if(getDebugPrefVal())
-            delay_bw_queries=20000;
-        Log.d(TAG,"Running in the Thread " +
-                Thread.currentThread().getId());
-        Document doc = jsoupConnector();
-        if (doc != null) {
-            Elements links = doc.select("tr:not(.shade)");
-            links = links.select("tr:not(.header)");
-            Log.i(TAG, "Parsed html length = " + (links.indexOf(links.last()) + 1));
+            delay_bw_queries = 20000;
+        hm = new HashMap<>();
+        new Timer().schedule(timerTask = new TimerTask() {
+            @Override
+            public void run() {
+                Log.d(TAG,"Running in the Thread " +
+                        Thread.currentThread().getId());
+                Document doc = jsoupConnector();
+                if (doc != null) {
+                    Elements links = doc.select("tr:not(.shade)");
+                    links = links.select("tr:not(.header)");
+                    Log.i(TAG, "Parsed html length = " + (links.indexOf(links.last()) + 1));
                     /*
                     for (Element link : links) { //get print of all data
                         Log.i(TAG, "Parsed html:" + link.text());
                     }*/
-            Element time_element = links.get(2); //get time element
-            //Log.i(TAG, "Time element: " + time_element.text());
-            Elements tds = time_element.getElementsByTag("td");
-            for (Element td : tds) {
-                updateTime = td.text().substring(td.text().indexOf(String.valueOf(Calendar.getInstance().get(Calendar.YEAR))), td.text().indexOf("UTC") - 1);
-                @SuppressLint("SimpleDateFormat") SimpleDateFormat format = new SimpleDateFormat(This.getString(R.string.dateNTimeFormat));
-                try {
-                    date = format.parse(updateTime);
-                    if (date != null)
-                        timeHasChanged = updateTimeAndCheck4Change(date, This);
-                    else timeHasChanged = false;
-                    break;
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-
-            }
-
-            Log.e(TAG,"timehaschanged and debug: "+timeHasChanged+" "+getDebugPrefVal());
-            if(timeHasChanged || getDebugPrefVal()){
-                Element el_1 = links.get(3); //get first row of results table
-                Element el_2 = links.get(4); //get second row of results table
-                Elements el1tds = el_1.getElementsByTag("td");
-                Elements el2tds = el_2.getElementsByTag("td");
-                hm.put(getString(R.string.fetched_prss_norad_k), Float.valueOf(el1tds.get(1).text()));
-                hm.put(getString(R.string.fetched_max_prob_k), Float.valueOf(el1tds.get(4).text()));
-                hm.put(getString(R.string.fetched_min_range_k), Float.valueOf(el1tds.get(6).text()));
-                hm.put(getString(R.string.fetched_rel_vel_k),  Float.valueOf(el1tds.get(7).text()));
-                hm.put(getString(R.string.fetched_deb_norad_k),  Float.valueOf(el2tds.get(0).text()));
-                hm.put(getString(R.string.fetched_deb_name_k), el2tds.get(1).text());
-                hm.put(getString(R.string.fetched_min_range_time_k), el2tds.get(5).text());
-
-                if (!PRSS_NORAD.equals(hm.get(getString(R.string.fetched_prss_norad_k))) )
-                    Log.e(TAG,"PARSING ERROR! at table elements parsing");
-                else{
-                    String warn_type;
-                    //noinspection ConstantConditions
-                    if ((Float) hm.get(getString(R.string.fetched_min_range_k)) <=
-                            red_min_range && (Float) hm.get(getResources().getString(R.string.fetched_max_prob_k))>=red_warn_thresh)
-                        warn_type = "RED";
-                    else { //noinspection ConstantConditions
-                        if ((Float) hm.get(getResources().getString(R.string.fetched_max_prob_k)) <= yellow_min_range
-                                && (Float) hm.get(getString(R.string.fetched_max_prob_k)) >= yello_warn_thresh)
-                            warn_type = "YELLOW";
-                        else warn_type = "No";
-                    }
-                    msg = msg.replace( "(TYPE)", warn_type.equals("No") ? "that there is no" :
-                            warn_type).replace("(DEB)",
-                            String.valueOf(hm.get(getString(R.string.fetched_deb_name_k))))
-                            .replace("(PROB)",
-                                    String.valueOf(hm.get(getString(R.string.fetched_max_prob_k))))
-                            .replace("(RNG)",
-                                    String.valueOf(hm.get(getString(R.string.fetched_min_range_k))))
-                            .replace("(UPDATE_TIME)", updateTime)
-                            .replace("(IM_TIME)",
-                                    String.valueOf(hm.get(getString(R.string.fetched_min_range_time_k))));
-
-                    send_sms2all = getsmsPriorityPrefVal().equals(getString(R.string.send_all_key));
-                    Thread thread = new Thread(new SendSMS_Thread());
-                    Log.e(TAG, msg);
-                    if (timeHasChanged && !warn_type.equals("No")) {
-                        thread.start();
-                    }
-                    else {
-                        Log.e(TAG, "No Celestrak Warning");
-                        if(getDebugPrefVal() && timeHasChanged){ //debug mode
-                            thread.start();
+                    Element time_element = links.get(2); //get time element
+                    //Log.i(TAG, "Time element: " + time_element.text());
+                    Elements tds = time_element.getElementsByTag("td");
+                    for (Element td : tds) {
+                        updateTime = td.text().substring(td.text().indexOf(String.valueOf(Calendar.getInstance().get(Calendar.YEAR))), td.text().indexOf("UTC") - 1);
+                        @SuppressLint("SimpleDateFormat") SimpleDateFormat format = new SimpleDateFormat(This.getString(R.string.dateNTimeFormat));
+                        try {
+                            date = format.parse(updateTime);
+                            if (date != null)
+                                timeHasChanged = updateTimeAndCheck4Change(date, This);
+                            else timeHasChanged = false;
+                            break;
+                        } catch (ParseException e) {
+                            e.printStackTrace();
                         }
+
                     }
-                }
+
+                    Log.e(TAG,"timehaschanged and debug: "+timeHasChanged+" "+getDebugPrefVal());
+                    if(timeHasChanged || getDebugPrefVal()){
+                        Element el_1 = links.get(3); //get first row of results table
+                        Element el_2 = links.get(4); //get second row of results table
+                        Elements el1tds = el_1.getElementsByTag("td");
+                        Elements el2tds = el_2.getElementsByTag("td");
+                        hm.put(getString(R.string.fetched_prss_norad_k), Float.valueOf(el1tds.get(1).text()));
+                        hm.put(getString(R.string.fetched_max_prob_k), Float.valueOf(el1tds.get(4).text()));
+                        hm.put(getString(R.string.fetched_min_range_k), Float.valueOf(el1tds.get(6).text()));
+                        hm.put(getString(R.string.fetched_rel_vel_k),  Float.valueOf(el1tds.get(7).text()));
+                        hm.put(getString(R.string.fetched_deb_norad_k),  Float.valueOf(el2tds.get(0).text()));
+                        hm.put(getString(R.string.fetched_deb_name_k), el2tds.get(1).text());
+                        hm.put(getString(R.string.fetched_min_range_time_k), el2tds.get(5).text());
+
+                        if (!PRSS_NORAD.equals(hm.get(getString(R.string.fetched_prss_norad_k))) )
+                            Log.e(TAG,"PARSING ERROR! at table elements parsing");
+                        else{
+                            String warn_type;
+                            //noinspection ConstantConditions
+                            if ((Float) hm.get(getString(R.string.fetched_min_range_k)) <=
+                                    red_min_range && (Float) hm.get(getResources().getString(R.string.fetched_max_prob_k))>=red_warn_thresh)
+                                warn_type = "RED";
+                            else { //noinspection ConstantConditions
+                                if ((Float) hm.get(getResources().getString(R.string.fetched_max_prob_k)) <= yellow_min_range
+                                        && (Float) hm.get(getString(R.string.fetched_max_prob_k)) >= yello_warn_thresh)
+                                    warn_type = "YELLOW";
+                                else warn_type = "No";
+                            }
+                            msg = msg.replace( "(TYPE)", warn_type.equals("No") ? "that there is no" :
+                                    warn_type).replace("(DEB)",
+                                    String.valueOf(hm.get(getString(R.string.fetched_deb_name_k))))
+                                    .replace("(PROB)",
+                                            String.valueOf(hm.get(getString(R.string.fetched_max_prob_k))))
+                                    .replace("(RNG)",
+                                            String.valueOf(hm.get(getString(R.string.fetched_min_range_k))))
+                                    .replace("(UPDATE_TIME)", updateTime)
+                                    .replace("(IM_TIME)",
+                                            String.valueOf(hm.get(getString(R.string.fetched_min_range_time_k))));
+
+                            send_sms2all = getsmsPriorityPrefVal().equals(getString(R.string.send_all_key));
+                            Log.e(TAG,"Send SMS action value retrieved as: "
+                                    + (send_sms2all? "send to all" : "send to me only"));
+                            Log.e(TAG, msg);
+                            if (timeHasChanged && (!warn_type.equals("No") || getDebugPrefVal()))
+                            {
+                                Thread thread = new Thread(new SendSMS_Thread());
+                                thread.start();
+                            }
+                        }
                     /*
                     for (Map.Entry<String, String> me :
                             hm.entrySet()) {
@@ -277,49 +279,17 @@ public class FetcherService extends Service {
                         System.out.println(me.getValue());
                     }
                  */
+                    }
+                    else if(!timeHasChanged){ //if this query time is same as last_updated
+                        Log.i(TAG,"This query time is same as last updated_time..." +
+                                "\n Retrying in "+delay_bw_queries+" mSec...");
+                    }
+                }
+                else
+                    Log.e(TAG, "Can't Connect... Please check internet " +
+                            "Retrying after "+ delay_bw_queries+"....");
             }
-            else if(!timeHasChanged){ //if this query time is same as last_updated
-                Log.i(TAG,"This query time is same as last updated_time..." +
-                        "\n Retrying in "+delay_bw_queries+" mSec...");
-            }
-        }
-        else
-            Log.e(TAG, "Can't Connect... Please check internet " +
-                    "Retrying after "+ delay_bw_queries+"....");
-
-    }
-
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        hm = new HashMap<>();
-        new Timer().schedule(timerTask = new TimerTask() {
-            @Override
-            public void run() {
-               mainTask();
-                printLog(This); //flush log to a file
-            }
-
         }, delay_bf_first_exec,delay_bw_queries);
-
-        Handler handler = new Handler(Looper.getMainLooper());
-        //a delayed task to rule out the probability of timerScheduler not working case
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                try{
-                    Log.e(TAG,"Running in BACKUP PROCEDURE....");
-                    mainTask();
-                    printLog(This); //flush log to a file
-                }
-                catch(Exception e){
-                    e.printStackTrace();
-                    // added try catch block to be sure of uninterupted execution
-                }
-                handler.postDelayed(this, 5000);
-            }
-        };
-        //handler.postDelayed(runnable, 5000);
-        handler.postDelayed(new Runnable(){public void run(){new Thread(runnable).start();}}, 5000);
         return START_STICKY;
     }
 
@@ -342,6 +312,7 @@ public class FetcherService extends Service {
 
     @Override
     public void onDestroy() {
+        printLog(This); //flush log to a file
         if(!timerTask.cancel())
             Log.e(TAG,"ERROR! couldn't cancel main timer task..");
         //unregisterReceiver(br);
@@ -372,10 +343,13 @@ public class FetcherService extends Service {
             if (send_sms2all) {
                 for (String number : numbrs) {
                     Log.e(TAG, "Sending sms...");
-                    smsManager.sendMultipartTextMessage(number, null, smsManager.divideMessage(msg), null, null);
+                    smsManager.sendMultipartTextMessage(number, null,
+                            smsManager.divideMessage(msg), null, null);
                 }
             }else {
-                smsManager.sendMultipartTextMessage("+923342576758", null, smsManager.divideMessage(msg), null, null);
+                smsManager.sendMultipartTextMessage("+923342576758",
+                        null, smsManager.divideMessage(msg), null,
+                        null);
                 Log.e(TAG, "Sending sms...");
             }
         }

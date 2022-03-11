@@ -169,7 +169,7 @@ public class SettingsActivity extends AppCompatActivity {
             svc_sw_cntxt = svc_sw_pref.getContext();
             svc_sw_pref.callChangeListener(getServiceStatus(svc_sw_cntxt)); //set current status
             svc_sw_cntxt = svc_sw_pref.getContext().getApplicationContext();
-            svc_intent = new Intent(svc_sw_cntxt,FetcherService.class);
+            svc_intent = new Intent(svc_sw_cntxt.getApplicationContext(),FetcherService.class);
             Preference sms_notif_pref = findPreference(getString(R.string.sms_notif_key));
             assert sms_notif_pref != null;
             sms_notif_pref.setOnPreferenceChangeListener((preference, newValue) -> {
