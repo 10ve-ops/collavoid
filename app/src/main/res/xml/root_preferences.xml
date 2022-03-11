@@ -26,7 +26,6 @@
             app:switchTextOff="Stoppped"/>
 
         <SwitchPreferenceCompat
-            app:dependency="serviceStatus"
             app:key="@string/sms_notif_key"
             app:summaryOff="@string/sms_notification_summary_off"
             app:summaryOn="@string/sms_notification_summary_on"
@@ -49,6 +48,13 @@ And then restart after changing params."/>
             app:persistent="false"
             app:title="Recipients"
             app:summary="@string/receipentNames"/>
+
+        <Preference
+            app:key="@string/logFileSize_key"
+            app:selectable="true"
+            app:persistent="true"
+            app:title="@string/logFileSize_title"
+            app:useSimpleSummaryProvider="true"/>
 
     </PreferenceCategory>
 

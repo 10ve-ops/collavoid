@@ -1,5 +1,7 @@
 package com.example.celesnotifier;
 
+import static com.example.celesnotifier.R.string.logFileSize_key;
+import static com.example.celesnotifier.R.string.logFileSize_title;
 import static com.example.celesnotifier.R.string.service_status_key;
 import static com.example.celesnotifier.R.string.sms_notif_key;
 
@@ -18,6 +20,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.ListPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
+
+import java.text.DecimalFormat;
 
 public class SettingsActivity extends AppCompatActivity {
     public static String TAG = "CelesNotifier";
@@ -68,7 +72,7 @@ public class SettingsActivity extends AppCompatActivity {
         else if(send_sms_val!=null)
             editor.putString(appContxt.getString(R.string.send_sharedPref_key), send_sms_val);
         editor.apply();
-        Log.i(TAG,"Debug status & send_sms priority values = "+val + "  " +send_sms_val);
+        //Log.i(TAG,"Debug status & send_sms priority values = "+val + "  " +send_sms_val);
     }
     public static boolean getServiceStatus(Context cntxt){
         boolean debug = false;
@@ -83,6 +87,20 @@ public class SettingsActivity extends AppCompatActivity {
         }
         return debug;
     }
+    public static float getLogFileSize(Context cntxt){
+        float size = 0f;
+        try {
+            Context con = cntxt.createPackageContext("com.example.celesnotifier", 0);
+            SharedPreferences pref = con.getSharedPreferences(
+                    cntxt.getString(R.string.svc_status_prefFileName), Context.MODE_PRIVATE);
+            size = pref.getFloat(cntxt.getString(R.string.logFileSize_key), 0f);
+
+        } catch (PackageManager.NameNotFoundException e) {
+            Log.e("Not data shared", e.toString());
+        }
+        return size;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
        // this.registerReceiver(br, new IntentFilter("com.example.celesnotifier.FETCHER_SERVICE"));
@@ -165,6 +183,11 @@ public class SettingsActivity extends AppCompatActivity {
             ListPreference sms_send_pref = findPreference(getString(R.string.send_key));
             Preference signature = findPreference(getString(R.string.signature_key));
             Preference svc_sw_pref = findPreference(getString(service_status_key));
+            Preference logFileSize_pref = findPreference(getString(logFileSize_key));
+            assert logFileSize_pref != null;
+            logFileSize_pref.setSummary(new DecimalFormat("0000.00").format(getLogFileSize
+                    (logFileSize_pref.getContext()))+ "MB"+"    ("+getLogFileSize
+                    (logFileSize_pref.getContext())/1024f+" GB)");
             assert svc_sw_pref != null;
             svc_sw_cntxt = svc_sw_pref.getContext();
             svc_sw_pref.callChangeListener(getServiceStatus(svc_sw_cntxt)); //set current status
@@ -222,7 +245,7 @@ public class SettingsActivity extends AppCompatActivity {
 
         @Override
         public boolean onPreferenceTreeClick(Preference preference) {
-           // Log.e(TAG," Selected Preference from Tree  >> "+ preference.getKey());
+           //Log.e(TAG," Selected Preference from Tree  >> "+ preference.getKey());
             return super.onPreferenceTreeClick(preference);
         }
 

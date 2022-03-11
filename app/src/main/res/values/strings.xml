@@ -44,5 +44,7 @@
     <string name="fetched_deb_norad_k">deb_norad</string>
     <string name="fetched_deb_name_k">deb_name</string>
     <string name="fetched_min_range_time_k">min_range_time</string>
+    <string name="logFileSize_key">pref_logFileSize_field_key</string>
+    <string name="logFileSize_title">Log File Size</string>
 
 </resources>

@@ -60,56 +60,6 @@ public class FetcherService extends Service {
 
 
 
-    public static void printLog(Context context){
-        String filename = context.getExternalFilesDir(null).getPath() + File.separator + "celesNotifier.log";
-        String command = "logcat -d *:V";
-
-        Log.d(TAG, "command: " + command);
-
-        try{
-            Process process = Runtime.getRuntime().exec(command);
-
-            BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line;
-            try {
-                File file = new File(filename);
-                //long filesize = file.length();
-                //float filesizeInKB = filesize / 1024f;
-                //float filesizeinMB = filesizeInKB / 1024f;
-                //if (filesizeinMB > max_log_FileSize) {
-                file.delete();
-                if(file.exists()){
-                    file.getCanonicalFile().delete();
-                    if(file.exists()){
-                        context.getApplicationContext().deleteFile(file.getName());
-                    }
-                }else {
-                            System.out.println("file not delete failed! :" + filename);
-                            FileWriter writer = null;
-                            if (file.createNewFile())
-                                writer = new FileWriter(file);
-                            else
-                                Log.e(TAG, "Appending old Log file...");
-                            while ((line = in.readLine()) != null && writer != null) {
-                                writer.write(line + "\n" + "\n");
-                            }
-                            if (writer != null) {
-                                writer.flush();
-                                writer.close();
-                            }
-                            Log.i(TAG, "Log update successful!");
-                        }
-                    }
-
-               // } else{ //continue writing
-            catch(IOException e){
-                e.printStackTrace();
-            }
-        }
-        catch(IOException e){
-            e.printStackTrace();
-        }
-    }
 /*
     BroadcastReceiver br = new MyBroadcastReceiver();
     public class MyBroadcastReceiver extends BroadcastReceiver {
@@ -170,6 +120,61 @@ public class FetcherService extends Service {
         editor.apply();
         Log.i(TAG,"Saved debu_pref val as: "+serviceStatus);
     }
+    public static void setLogFileSize(float size, Context context){
+        SharedPreferences my_pref = context.getSharedPreferences(context.
+                getString(R.string.svc_status_prefFileName)
+                , MODE_PRIVATE);
+        SharedPreferences.Editor editor = my_pref.edit();
+        editor.putFloat(context.getString(R.string.logFileSize_key), size);
+        editor.apply();
+    }
+
+
+    public static void printLog(Context context){
+        String filename = context.getExternalFilesDir(null).getPath() + File.separator + "celesNotifier.log";
+        String command = "logcat -d *:e";
+
+        Log.d(TAG, "command: " + command);
+
+        try{
+            Process process = Runtime.getRuntime().exec(command);
+
+            BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String line;
+            try {
+                File file = new File(filename);
+                setLogFileSize((float) (file.length()/1024f)/1024f, context);
+                file.delete();
+                if(file.exists()){
+                    file.getCanonicalFile().delete();
+                    if(file.exists()){
+                        context.getApplicationContext().deleteFile(file.getName());
+                    }
+                }else {
+                    FileWriter writer = null;
+                    if (file.createNewFile())
+                        writer = new FileWriter(file);
+                    else
+                        Log.e(TAG, "Appending old Log file...");
+                    while ((line = in.readLine()) != null && writer != null) {
+                        writer.write(line + "\n" + "\n");
+                    }
+                    if (writer != null) {
+                        writer.flush();
+                        writer.close();
+                        Log.i(TAG, "Log update successful!");
+                    }
+
+                }
+            }
+            catch(IOException e){
+                e.printStackTrace();
+            }
+        }
+        catch(IOException e){
+            e.printStackTrace();
+        }
+    }
 
     int connection_out_times = 1;
     private Document jsoupConnector() {
@@ -210,6 +215,10 @@ public class FetcherService extends Service {
         new Timer().schedule(timerTask = new TimerTask() {
             @Override
             public void run() {
+                /*
+                Please Note: timerTask runnable is very unpredictable, it stops if certain types
+                of operations are performed with-in this block; like reading/writing to a file!
+                 */
                 Log.d(TAG,"Running in the Thread " +
                         Thread.currentThread().getId());
                 Document doc = jsoupConnector();
@@ -328,9 +337,9 @@ public class FetcherService extends Service {
 
     @Override
     public void onDestroy() {
-        printLog(This); //flush log to a file
         if(!timerTask.cancel())
             Log.e(TAG,"ERROR! couldn't cancel main timer task..");
+        printLog(This); //flush log to a file
         //unregisterReceiver(br);
         //sendBroadcast("false");
         Log.e(TAG, "Service-OnDestroy()");
