@@ -28,10 +28,11 @@
     <string name="debug_status_prefName">kkasdugdjfvniuxadfgdfgdfhgfnff23423syfdsy
         sdfsdfshdbvbsdv1651sd16sd3s16sd33fsdhfsncvisucicuadbairsdfbxc</string>
     <string name="service_status">Service Status</string>
-    <string name="sms_notification_title">SMS Notifications</string>
-    <string name="sms_notification_summary_on">Show sent SMS notification
+    <string name="sms_notification_title">Debug</string>
+    <string name="sms_notification_summary_on">Send action will be notified if data updates
     </string>
-    <string name="sms_notification_summary_off">Don\'t show sent SMS notification</string>
+    <string name="sms_notification_summary_off">Working in normal mode: sending
+        warnings directly</string>
     <string name="lastUpdated_time">last_update_time</string>
     <string name="send_sharedPref_key">jkznxckznx545</string>
     <string name="dateNTimeFormat">yyyy MMM dd HH:mm</string>

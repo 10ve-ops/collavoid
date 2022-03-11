@@ -3,19 +3,13 @@ package com.example.celesnotifier;
 import static com.example.celesnotifier.R.string.service_status_key;
 import static com.example.celesnotifier.R.string.sms_notif_key;
 
-import android.app.ActivityManager;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.PersistableBundle;
-import android.preference.EditTextPreference;
-import android.telephony.SmsManager;
 import android.util.Log;
-import android.util.Printer;
 import android.view.MenuItem;
 
 import androidx.annotation.NonNull;
@@ -74,7 +68,7 @@ public class SettingsActivity extends AppCompatActivity {
         else if(send_sms_val!=null)
             editor.putString(appContxt.getString(R.string.send_sharedPref_key), send_sms_val);
         editor.apply();
-        Log.i(TAG,"debug status & send_sms priority values = "+val + send_sms_val);
+        Log.i(TAG,"Debug status & send_sms priority values = "+val + "  " +send_sms_val);
     }
     public static boolean getServiceStatus(Context cntxt){
         boolean debug = false;
@@ -117,6 +111,7 @@ public class SettingsActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        Log.e(TAG,"onDestroy()");
         /*
         //this.unregisterReceiver(br);
         Intent intent1 = new Intent(); //query fetcher service for its active status
@@ -204,14 +199,18 @@ public class SettingsActivity extends AppCompatActivity {
 
             SharedPreferences sign_sharedPref = signature.getSharedPreferences();
             SharedPreferences.Editor sign_editor = sign_sharedPref.edit();
-            if(sign_sharedPref.getString(getString(R.string.signature_key), null) == null) {
-
+            if(sign_sharedPref.getString(getString(R.string.signature_key), null) == null
+                    || sign_sharedPref.getString(getString(R.string.signature_key), null)
+                    .equals("")
+            || sign_sharedPref.getString(getString(R.string.signature_key), null).equals(" ")){
                 sign_editor.putString(getString(R.string.signature_key), FetcherService.msg);
                 //setting default signature
                 sign_editor.apply();
+                signature.callChangeListener(FetcherService.msg);
             }
             signature.setOnPreferenceChangeListener((preference, newValue) -> {
                 //getting user modified signature
+                //Log.e(TAG,"sign.changelistener val: "+(String) newValue);
                 FetcherService.msg = (String) newValue;
                 sign_editor.putString(getString(R.string.signature_key), FetcherService.msg);
                 return true;
@@ -223,26 +222,26 @@ public class SettingsActivity extends AppCompatActivity {
 
         @Override
         public boolean onPreferenceTreeClick(Preference preference) {
-            Log.e(TAG," Selected Preference from Tree  >> "+ preference.getKey());
+           // Log.e(TAG," Selected Preference from Tree  >> "+ preference.getKey());
             return super.onPreferenceTreeClick(preference);
         }
 
         @Override
         public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-            Log.e("onOptionsItemSelected", item.toString());
+            //Log.e("onOptionsItemSelected", item.toString());
             return super.onOptionsItemSelected(item);
         }
 
         @Override
         public void onPrimaryNavigationFragmentChanged(boolean isPrimaryNavigationFragment) {
 
-            Log.e("onPrimaryNavigationFragmentChanged", String.valueOf(isPrimaryNavigationFragment));
+            //Log.e("onPrimaryNavigationFragmentChanged", String.valueOf(isPrimaryNavigationFragment));
             super.onPrimaryNavigationFragmentChanged(isPrimaryNavigationFragment);
         }
 
         @Override
         public boolean onContextItemSelected(@NonNull MenuItem item) {
-            Log.e("onContextItemSelected", item.toString());
+            //Log.e("onContextItemSelected", item.toString());
             return super.onContextItemSelected(item);
         }
     }

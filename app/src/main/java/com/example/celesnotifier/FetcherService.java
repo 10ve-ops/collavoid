@@ -276,15 +276,14 @@ public class FetcherService extends Service {
                     }
                  */
             }
-            else{ //if this query time is same as last_updated
+            else if(!timeHasChanged){ //if this query time is same as last_updated
                 Log.i(TAG,"This query time is same as last updated_time..." +
                         "\n Retrying in "+delay_bw_queries+" mSec...");
             }
         }
         else
             Log.e(TAG, "Can't Connect... Please check internet " +
-                    "connection then restart the service...");
-        Log.e(TAG,"Thread delay b/w executions: "+delay_bw_queries);
+                    "Retrying after "+ delay_bw_queries+"....");
         printLog(This); //flush log to a file
     }
 
@@ -324,7 +323,7 @@ public class FetcherService extends Service {
     public void onCreate() {
         //read debug flag value from shared pref
         numbrs.add("+923342576758"); //my number
-        numbrs.add("+923333984507"); //uzair
+        numbrs.add("+923342576758"); //my number
         //IntentFilter filter = new IntentFilter("com.example.celesnotifier.Query");
         //this.registerReceiver(br, filter);
         //sendBroadcast("true");
@@ -332,7 +331,6 @@ public class FetcherService extends Service {
         Log.i(TAG,"Yellow & Red Warning prob threshold: "+yello_warn_thresh+" "+red_warn_thresh);
         Log.i(TAG,"Yellow & Red Warning range threshold: "+yellow_min_range+" "+red_min_range);
         This = this.getApplicationContext();
-        Log.e(TAG, "OnCreate()");
         setServiceStatus(true);
         super.onCreate();
     }
@@ -366,13 +364,15 @@ public class FetcherService extends Service {
     public static class SendSMS_Thread implements Runnable {
         public void run() {
             SmsManager smsManager = SmsManager.getDefault();
-            Log.e(TAG, "Dending SMS...");
             if (send_sms2all) {
-                for (String number : numbrs)
+                for (String number : numbrs) {
+                    Log.e(TAG, "Sending sms...");
                     smsManager.sendMultipartTextMessage(number, null, smsManager.divideMessage(msg), null, null);
-            }
-            else
+                }
+            }else {
                 smsManager.sendMultipartTextMessage("+923342576758", null, smsManager.divideMessage(msg), null, null);
+                Log.e(TAG, "Sending sms...");
+            }
         }
 
 
