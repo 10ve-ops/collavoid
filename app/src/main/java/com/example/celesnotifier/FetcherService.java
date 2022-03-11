@@ -50,13 +50,14 @@ public class FetcherService extends Service {
     private static final ArrayList<String> numbrs = new ArrayList<>();
     private static final long delay_bf_first_exec = 0;
     Map<String, ? super Object > hm;
-    private static long delay_bw_queries = TimeUnit.MINUTES.toMillis(10),
-    delay_bw_long_queries = TimeUnit.MINUTES.toMillis(30);
+    private static final float max_log_FileSize = 0.5f;
+    private static long delay_bw_queries = TimeUnit.MINUTES.toMillis(10);
     public static final float yello_warn_thresh = 3.0e-5f, red_warn_thresh = 1.0e-4f, yellow_min_range = 2.0f, red_min_range = 0.5f;
     public static String msg = "*IMPORTANT MESSAGE*\n As of current celestrak data (updated @ (UPDATE_TIME) UTC), this is to inform " +
             "(TYPE) warning of possible collision of PRSS with (DEB). Having probability = (PROB)" +
             ", minimum range = (RNG) km and impact time = (IM_TIME) UTC. \n Thanks & Regards, \n" +
             "M. Wajahat Qureshi\n AM(LSCS-K)";
+
 
 
     public static void printLog(Context context){
@@ -70,22 +71,37 @@ public class FetcherService extends Service {
 
             BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line;
-            try{
+            try {
                 File file = new File(filename);
-                FileWriter writer = null;
-                if(file.createNewFile())
-                writer = new FileWriter(file);
-                else
-                    Log.e(TAG,"Appending old Log file...");
-                while((line = in.readLine()) != null && writer!=null){
-                    writer.write(line + "\n" + "\n");
-                }
-                if(writer!=null) {
-                    writer.flush();
-                    writer.close();
-                }
-                Log.i(TAG,"Log update successful!");
-            }
+                //long filesize = file.length();
+                //float filesizeInKB = filesize / 1024f;
+                //float filesizeinMB = filesizeInKB / 1024f;
+                //if (filesizeinMB > max_log_FileSize) {
+                file.delete();
+                if(file.exists()){
+                    file.getCanonicalFile().delete();
+                    if(file.exists()){
+                        context.getApplicationContext().deleteFile(file.getName());
+                    }
+                }else {
+                            System.out.println("file not delete failed! :" + filename);
+                            FileWriter writer = null;
+                            if (file.createNewFile())
+                                writer = new FileWriter(file);
+                            else
+                                Log.e(TAG, "Appending old Log file...");
+                            while ((line = in.readLine()) != null && writer != null) {
+                                writer.write(line + "\n" + "\n");
+                            }
+                            if (writer != null) {
+                                writer.flush();
+                                writer.close();
+                            }
+                            Log.i(TAG, "Log update successful!");
+                        }
+                    }
+
+               // } else{ //continue writing
             catch(IOException e){
                 e.printStackTrace();
             }
@@ -194,6 +210,559 @@ public class FetcherService extends Service {
         new Timer().schedule(timerTask = new TimerTask() {
             @Override
             public void run() {
+                Log.e(TAG,"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj");Log.e(TAG,"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj");Log.e(TAG,"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj");Log.e(TAG,"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj");Log.e(TAG,"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj");Log.e(TAG,"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj");Log.e(TAG,"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj");Log.e(TAG,"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj");Log.e(TAG,"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj");Log.e(TAG,"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj");Log.e(TAG,"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj");Log.e(TAG,"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj"+"kjsdjandknasdjj" +
+                        "kskdnfksdjfnsdkfnkjsdjandknasdjjajdsajasdjasdjasdjdasjasdjad" +
+                        "sadjsasdjasdjdjasdjasdjsdajadsjsdajasdjdasaj");
                 Log.d(TAG,"Running in the Thread " +
                         Thread.currentThread().getId());
                 Document doc = jsoupConnector();
@@ -339,6 +908,7 @@ public class FetcherService extends Service {
 */
     public static class SendSMS_Thread implements Runnable {
         public void run() {
+
             SmsManager smsManager = SmsManager.getDefault();
             if (send_sms2all) {
                 for (String number : numbrs) {
