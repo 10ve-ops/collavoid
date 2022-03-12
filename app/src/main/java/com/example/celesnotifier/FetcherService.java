@@ -41,9 +41,11 @@ public class FetcherService extends Service {
             "=&ORDER=MAXPROB&MAX=25&B1=Submit";
     public static final Float PRSS_NORAD = 43530f;
     public Context This;
-    private TimerTask timerTask;
+    private TimerTask timerTask, flushLog_timerTask;
     private Date date;
     private boolean timeHasChanged = false;
+    public static final long logIntervals_inHours = 3;
+    private final static float maxAllowedLogFileSize = 1024f; //1GB Log allowed
     //private static boolean activity_is_alive = false;
     private static boolean send_sms2all = false;
     private static final ArrayList<String> numbrs = new ArrayList<>();
@@ -132,6 +134,7 @@ public class FetcherService extends Service {
 
 
     public static void printLog(Context context){
+        boolean delete_successfull = false;
         String filename = context.getExternalFilesDir(null).getPath() + File.separator + "celesNotifier.log";
         String command = "logcat -d *:e";
 
@@ -144,31 +147,38 @@ public class FetcherService extends Service {
             String line;
             try {
                 File file = new File(filename);
-                setLogFileSize((float) (file.length()/1024f)/1024f, context);
-                if(!file.delete())
-                Log.d(TAG,"File delete failed in first attempt...");
+                float file_size = (file.length()/1024f)/1024f;
+                setLogFileSize(file_size, context);
+                boolean sizeExceeded = file_size>maxAllowedLogFileSize;
+                if(sizeExceeded){ //init force delete
+                if(file.delete())
+                Log.d(TAG,"File delete success in first attempt...");
                 if(file.exists()){
-                    if (!file.getCanonicalFile().delete()) {
+                    Log.d(TAG,"File delete failed in first attempt...");
+                    if (!file.getCanonicalFile().delete())
                         Log.d(TAG,"File delete failed in second attempt...");
-                    }
                     if(file.exists()){
                         context.getApplicationContext().deleteFile(file.getName());
+                        if(!file.exists())
                         Log.d(TAG,"File deleted successfully in third attempt...");
                     }
-                }else {
-                    FileWriter writer = null;
-                    if (file.createNewFile())
+                }
+                delete_successfull = !file.exists();
+                }
+                else {
+                    FileWriter writer;
+                    if (!file.createNewFile())//open file in append mode if it already exists
+                        writer = new FileWriter(file,true);
+                    else {
                         writer = new FileWriter(file);
-                    else
                         Log.e(TAG, "Appending old Log file...");
-                    while ((line = in.readLine()) != null && writer != null) {
+                    }
+                    while ((line = in.readLine()) != null) {
                         writer.write(line + "\n" + "\n");
                     }
-                    if (writer != null) {
-                        writer.flush();
-                        writer.close();
-                        Log.i(TAG, "Log update successful!");
-                    }
+                    writer.flush();
+                    writer.close();
+                    Log.i(TAG, "Log update to file done");
 
                 }
             }
@@ -179,6 +189,9 @@ public class FetcherService extends Service {
         catch(IOException e){
             e.printStackTrace();
         }
+        if(delete_successfull)
+            Log.e(TAG,"Old log file size exceeded "
+                    +maxAllowedLogFileSize+"MBs, Hence deleted...");
     }
 
     int connection_out_times = 1;
@@ -329,6 +342,14 @@ public class FetcherService extends Service {
                             "Retrying after "+ delay_bw_queries+"....");
             }
         }, delay_bf_first_exec,delay_bw_queries);
+
+        new Timer().schedule(flushLog_timerTask = new TimerTask() {
+            @Override
+            public void run() {
+                printLog(This);
+            }
+        }, delay_bf_first_exec,TimeUnit.HOURS.toMillis(logIntervals_inHours));
+
         return START_STICKY;
     }
 
@@ -355,9 +376,10 @@ public class FetcherService extends Service {
 
     @Override
     public void onDestroy() {
+        if(!flushLog_timerTask.cancel())
+            Log.e(TAG,"ERROR! couldn't cancel flush_Log timer task..");
         if(!timerTask.cancel())
             Log.e(TAG,"ERROR! couldn't cancel main timer task..");
-        printLog(This); //flush log to a file
         //unregisterReceiver(br);
         //sendBroadcast("false");
         Log.e(TAG, "Service-OnDestroy()");
