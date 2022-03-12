@@ -1,6 +1,5 @@
 package com.example.celesnotifier;
 
-import android.annotation.SuppressLint;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -9,16 +8,13 @@ import android.content.pm.PackageManager;
 import android.os.IBinder;
 import android.telephony.SmsManager;
 import android.util.Log;
-
 import androidx.annotation.Nullable;
 import androidx.preference.PreferenceManager;
-
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
@@ -30,7 +26,9 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
@@ -38,7 +36,9 @@ import java.util.concurrent.TimeUnit;
 public class FetcherService extends Service {
     public static String TAG = "Fetcher Service";
     static String updateTime;
-    public static final String URL = "https://celestrak.com/SOCRATES/search-results.php?IDENT=NAME&NAME_TEXT1=PRSS&NAME_TEXT2=&CATNR_TEXT1=&CATNR_TEXT2=&ORDER=MAXPROB&MAX=25&B1=Submit";
+    public static final String URL = "https://celestrak.com/SOCRATES/search-results.php?IDENT" +
+            "=NAME&NAME_TEXT1=PRSS&NAME_TEXT2=&CATNR_TEXT1=&CATNR_TEXT2" +
+            "=&ORDER=MAXPROB&MAX=25&B1=Submit";
     public static final Float PRSS_NORAD = 43530f;
     public Context This;
     private TimerTask timerTask;
@@ -46,14 +46,15 @@ public class FetcherService extends Service {
     private boolean timeHasChanged = false;
     //private static boolean activity_is_alive = false;
     private static boolean send_sms2all = false;
-    long timerTaskCount = 0;
     private static final ArrayList<String> numbrs = new ArrayList<>();
     private static final long delay_bf_first_exec = 0;
     Map<String, ? super Object > hm;
-    private static final float max_log_FileSize = 0.5f;
     private static long delay_bw_queries = TimeUnit.MINUTES.toMillis(10);
-    public static final float yello_warn_thresh = 3.0e-5f, red_warn_thresh = 1.0e-4f, yellow_min_range = 2.0f, red_min_range = 0.5f;
-    public static String msg = "*IMPORTANT MESSAGE*\n As of current celestrak data (updated @ (UPDATE_TIME) UTC), this is to inform " +
+    public static final float yello_warn_thresh = 3.0e-5f, red_warn_thresh = 1.0e-4f,
+            yellow_min_range = 2.0f, red_min_range = 0.5f;
+    SimpleDateFormat format_4DISP, format_4PARSNG;
+    public static String msg = "*IMPORTANT MESSAGE*\n As of current celestrak data " +
+            "(updated @ (UPDATE_TIME) UTC), this is to inform " +
             "(TYPE) warning of possible collision of PRSS with (DEB). Having probability = (PROB)" +
             ", minimum range = (RNG) km and impact time = (IM_TIME) UTC. \n Thanks & Regards, \n" +
             "M. Wajahat Qureshi\n AM(LSCS-K)";
@@ -144,11 +145,15 @@ public class FetcherService extends Service {
             try {
                 File file = new File(filename);
                 setLogFileSize((float) (file.length()/1024f)/1024f, context);
-                file.delete();
+                if(!file.delete())
+                Log.d(TAG,"File delete failed in first attempt...");
                 if(file.exists()){
-                    file.getCanonicalFile().delete();
+                    if (!file.getCanonicalFile().delete()) {
+                        Log.d(TAG,"File delete failed in second attempt...");
+                    }
                     if(file.exists()){
                         context.getApplicationContext().deleteFile(file.getName());
+                        Log.d(TAG,"File deleted successfully in third attempt...");
                     }
                 }else {
                     FileWriter writer = null;
@@ -189,14 +194,20 @@ public class FetcherService extends Service {
             else return null;
         }
     }
-    private boolean updateTimeAndCheck4Change(Date thisDate, Context This){ //compare thisTime with oldTime if oldTime!=0 then return boolean showing that this query is unique w.r.t time
+    private Date getLatestTime(){
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(This);
-        SharedPreferences.Editor editor = pref.edit();
+        return new Date(pref.getLong(This.getString(R.string.lastUpdated_time), 0));
+    }
+    private boolean updateTimeAndCheck4Change(Date thisDate, Context This){
+        //compare thisTime with oldTime if oldTime!=0 then return boolean
+        // showing that this query is unique w.r.t time
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(This);
         Date prev_date = new Date(pref.getLong(This.getString(R.string.lastUpdated_time), 0));
-        Log.e(TAG,"Last update time: "+ prev_date);
-        Log.e(TAG,"This query time: "+ thisDate);
+        Log.e(TAG,"Last update time: "+ format_4DISP.format(prev_date));
+        Log.e(TAG,"This query time: "+ format_4DISP.format(thisDate));
         if (thisDate.after(prev_date))
         {
+            SharedPreferences.Editor editor = pref.edit();
             editor.putLong(This.getString(R.string.lastUpdated_time), thisDate.getTime());
             editor.apply();
             return true;
@@ -234,13 +245,16 @@ public class FetcherService extends Service {
                     //Log.i(TAG, "Time element: " + time_element.text());
                     Elements tds = time_element.getElementsByTag("td");
                     for (Element td : tds) {
-                        updateTime = td.text().substring(td.text().indexOf(String.valueOf(Calendar.getInstance().get(Calendar.YEAR))), td.text().indexOf("UTC") - 1);
-                        @SuppressLint("SimpleDateFormat") SimpleDateFormat format = new SimpleDateFormat(This.getString(R.string.dateNTimeFormat));
+                        updateTime = td.text().substring(td.text()
+                                .indexOf(String.valueOf(Calendar.getInstance().
+                                        get(Calendar.YEAR))), td.text().indexOf("UTC") - 1);
                         try {
-                            date = format.parse(updateTime);
-                            if (date != null)
+                            Log.i(TAG,"Current Query Date String ="+updateTime);
+                            date = format_4PARSNG.parse(updateTime);
+                            if (date != null) {
                                 timeHasChanged = updateTimeAndCheck4Change(date, This);
-                            else timeHasChanged = false;
+                                break;
+                            }
                             break;
                         } catch (ParseException e) {
                             e.printStackTrace();
@@ -283,7 +297,7 @@ public class FetcherService extends Service {
                                             String.valueOf(hm.get(getString(R.string.fetched_max_prob_k))))
                                     .replace("(RNG)",
                                             String.valueOf(hm.get(getString(R.string.fetched_min_range_k))))
-                                    .replace("(UPDATE_TIME)", updateTime)
+                                    .replace("(UPDATE_TIME)", format_4DISP.format(getLatestTime()))
                                     .replace("(IM_TIME)",
                                             String.valueOf(hm.get(getString(R.string.fetched_min_range_time_k))));
 
@@ -332,6 +346,10 @@ public class FetcherService extends Service {
         Log.i(TAG,"Yellow & Red Warning range threshold: "+yellow_min_range+" "+red_min_range);
         This = this.getApplicationContext();
         setServiceStatus(true);
+        format_4DISP = new SimpleDateFormat(This.getString(R.string.dateNTimeSMS_Format), Locale.US);
+        format_4DISP.setTimeZone(TimeZone.getTimeZone("UTC"));
+        format_4PARSNG = new SimpleDateFormat(This.getString(R.string.dateNTimePSRSE_Format), Locale.US);
+        format_4PARSNG.setTimeZone(TimeZone.getTimeZone("UTC"));
         super.onCreate();
     }
 
