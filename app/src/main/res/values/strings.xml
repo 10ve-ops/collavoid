@@ -36,8 +36,8 @@
         warnings directly</string>
     <string name="lastUpdated_time">last_update_time</string>
     <string name="send_sharedPref_key">jkznxckznx545</string>
-    <string name="dateNTimePSRSE_Format">yyyy MMM dd HH:mm zzz</string>
-    <string name="dateNTimeSMS_Format">EEE MMM dd yyyy HH:mm</string>
+    <string name="dateNTimePSRSE_Format">yyyy MMM dd HH:mm</string>
+    <string name="dateNTimeSMS_Format">EEE MMM dd yyyy HH:mm z</string>
     <string name="fetched_prss_norad_k">prss_norad</string>
     <string name="fetched_max_prob_k">max_prob</string>
     <string name="fetched_min_range_k">min_range</string>

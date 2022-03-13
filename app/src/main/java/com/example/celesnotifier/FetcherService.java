@@ -261,11 +261,15 @@ public class FetcherService extends Service {
                     Log.i(TAG, "Time element: " + time_el_txt);
                         updateTime = time_el_txt.substring(time_el_txt
                                 .indexOf(String.valueOf(Calendar.getInstance().
-                                        get(Calendar.YEAR))), time_el_txt.indexOf("UTC")+3);
+                                        get(Calendar.YEAR))), time_el_txt.indexOf("UTC")-1);
                         try {
                             Log.i(TAG,"Current Query Date String ="+updateTime);
                             date = format_4PARSNG.parse(updateTime);
-                            Log.e(TAG,"Parsed Date From Time Element:"+date);
+                            //GMT+05 is not a property of Date obj.
+                            //Log.e(TAG,"Parsed Date From Time Element:"+date);
+                            //This print statement adds it
+                            Log.e(TAG,"Parsed Date From Time Element:"+
+                                    format_4DISP.format(date));
                             if (date != null) {
                                 timeHasChanged = updateTimeAndCheck4Change(date, This);
                             }
