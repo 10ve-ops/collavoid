@@ -122,7 +122,7 @@ public class FetcherService extends Service {
         SharedPreferences.Editor editor = my_pref.edit();
         editor.putBoolean(getString(R.string.svc_status_prefName), serviceStatus);
         editor.apply();
-        Log.i(TAG,"Saved debu_pref val as: "+serviceStatus);
+        Log.i(TAG,"setServiceStatus(): "+serviceStatus);
     }
     public static void setLogFileSize(float size, Context context){
         SharedPreferences my_pref = context.getSharedPreferences(context.
@@ -240,6 +240,7 @@ public class FetcherService extends Service {
         new Timer().schedule(timerTask = new TimerTask() {
             @Override
             public void run() {
+                String warn_type;
                 /*
                 Please Note: timerTask runnable is very unpredictable, it stops if certain types
                 of operations are performed with-in this block; like reading/writing to a file!
@@ -255,29 +256,26 @@ public class FetcherService extends Service {
                         Log.i(TAG, "Parsed html:" + link.text());
                     }*/
 
-                    Element time_element = links.get(2); //get time element
-                    //Log.i(TAG, "Time element: " + time_element.text());
-                    Elements tds = time_element.getElementsByTag("td");
-                    for (Element td : tds) {
-                        updateTime = td.text().substring(td.text()
+                    Elements time_element_paras = links.select("p"); //get time element paras
+                    String time_el_txt = time_element_paras.get(2).text();
+                    Log.i(TAG, "Time element: " + time_el_txt);
+                        updateTime = time_el_txt.substring(time_el_txt
                                 .indexOf(String.valueOf(Calendar.getInstance().
-                                        get(Calendar.YEAR))), td.text().indexOf("UTC") - 1);
+                                        get(Calendar.YEAR))), time_el_txt.indexOf("UTC")+3);
                         try {
                             Log.i(TAG,"Current Query Date String ="+updateTime);
                             date = format_4PARSNG.parse(updateTime);
+                            Log.e(TAG,"Parsed Date From Time Element:"+date);
                             if (date != null) {
                                 timeHasChanged = updateTimeAndCheck4Change(date, This);
-                                break;
                             }
                         } catch (ParseException e) {
-                            Log.e(TAG,"FATAL! Couldn't parse updateTime");
+                            Log.e(TAG,"FATAL! updateTime parsing failed");
                             e.printStackTrace();
                         }
 
-                    }
-
-                    Log.e(TAG,"timehaschanged and debug: "+timeHasChanged+" "+getDebugPrefVal());
-                    if(timeHasChanged || getDebugPrefVal()){
+                    Log.e(TAG,"timehaschanged and debug: "+ timeHasChanged+" "+ getDebugPrefVal());
+                    if(timeHasChanged) {
                         Element el_1 = links.get(3); //get first row of results table
                         Element el_2 = links.get(4); //get second row of results table
                         Elements el1tds = el_1.getElementsByTag("td");
@@ -285,26 +283,23 @@ public class FetcherService extends Service {
                         hm.put(getString(R.string.fetched_prss_norad_k), Float.valueOf(el1tds.get(1).text()));
                         hm.put(getString(R.string.fetched_max_prob_k), Float.valueOf(el1tds.get(4).text()));
                         hm.put(getString(R.string.fetched_min_range_k), Float.valueOf(el1tds.get(6).text()));
-                        hm.put(getString(R.string.fetched_rel_vel_k),  Float.valueOf(el1tds.get(7).text()));
-                        hm.put(getString(R.string.fetched_deb_norad_k),  Float.valueOf(el2tds.get(0).text()));
+                        hm.put(getString(R.string.fetched_rel_vel_k), Float.valueOf(el1tds.get(7).text()));
+                        hm.put(getString(R.string.fetched_deb_norad_k), Float.valueOf(el2tds.get(0).text()));
                         hm.put(getString(R.string.fetched_deb_name_k), el2tds.get(1).text());
                         hm.put(getString(R.string.fetched_min_range_time_k), el2tds.get(5).text());
-
-                        if (!PRSS_NORAD.equals(hm.get(getString(R.string.fetched_prss_norad_k))) )
-                            Log.e(TAG,"PARSING ERROR! at table elements parsing");
-                        else{
-                            String warn_type;
+                        if (!PRSS_NORAD.equals(hm.get(getString(R.string.fetched_prss_norad_k))))
+                            Log.e(TAG, "PARSING ERROR! at table elements parsing");
+                        else {
                             //noinspection ConstantConditions
                             if ((Float) hm.get(getString(R.string.fetched_min_range_k)) <=
-                                    red_min_range && (Float) hm.get(getResources().getString(R.string.fetched_max_prob_k))>=red_warn_thresh)
+                                    red_min_range && (Float) hm.get(getResources().getString(R.string.fetched_max_prob_k)) >= red_warn_thresh)
                                 warn_type = "RED";
-                            else { //noinspection ConstantConditions
+                            else //noinspection ConstantConditions
                                 if ((Float) hm.get(getResources().getString(R.string.fetched_max_prob_k)) <= yellow_min_range
                                         && (Float) hm.get(getString(R.string.fetched_max_prob_k)) >= yello_warn_thresh)
                                     warn_type = "YELLOW";
                                 else warn_type = "No";
-                            }
-                            msg = msg.replace( "(TYPE)", warn_type.equals("No") ? "that there is no" :
+                            msg = msg.replace("(TYPE)", warn_type.equals("No") ? "that there is no" :
                                     warn_type).replace("(DEB)",
                                     String.valueOf(hm.get(getString(R.string.fetched_deb_name_k))))
                                     .replace("(PROB)",
@@ -316,7 +311,7 @@ public class FetcherService extends Service {
                                             String.valueOf(hm.get(getString(R.string.fetched_min_range_time_k))));
 
                             Log.e(TAG, msg);
-                            if (timeHasChanged && (!warn_type.equals("No") || getDebugPrefVal()))
+                            if (!warn_type.equals("No") || getDebugPrefVal())
                             {
                                 send_sms2all = getsmsPriorityPrefVal().
                                         equals(getString(R.string.send_all_key));
@@ -326,21 +321,21 @@ public class FetcherService extends Service {
                             }
                         }
                         Log.i(TAG,"Printing all mapping entires.....");
-                    for (Map.Entry<String, ? super Object> me :
-                            hm.entrySet()) {
-                        System.out.print(me.getKey() + ":");
-                        System.out.println(me.getValue());
+                        for (Map.Entry<String, ? super Object> me :
+                                hm.entrySet()) {
+                            System.out.print(me.getKey() + ":");
+                            System.out.println(me.getValue());
+                        }
                     }
-            
-                    }
-                    else if(!timeHasChanged){ //if this query time is same as last_updated
+                    else { //if this query time is same as last_updated
                         Log.i(TAG,"This query time is same as last updated_time..." +
-                                "\n Retrying in "+delay_bw_queries+" mSec...");
+                                "\n Retrying in "+TimeUnit.MILLISECONDS.toSeconds(delay_bw_queries)+" Seconds...");
+
                     }
                 }
                 else
                     Log.e(TAG, "Can't Connect... Please check internet " +
-                            "Retrying after "+ delay_bw_queries+"....");
+                            "\n Retrying in "+TimeUnit.MILLISECONDS.toSeconds(delay_bw_queries)+" Seconds...");
             }
         }, delay_bf_first_exec,delay_bw_queries);
 
