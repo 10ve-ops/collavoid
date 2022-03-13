@@ -60,6 +60,7 @@ public class FetcherService extends Service {
             "(TYPE) warning of possible collision of PRSS with (DEB). Having probability = (PROB)" +
             ", minimum range = (RNG) km and impact time = (IM_TIME) UTC. \n Thanks & Regards, \n" +
             "M. Wajahat Qureshi\n AM(LSCS-K)";
+    Thread sms_thread;
 
 
 
@@ -136,7 +137,7 @@ public class FetcherService extends Service {
     public static void printLog(Context context){
         boolean delete_successfull = false;
         String filename = context.getExternalFilesDir(null).getPath() + File.separator + "celesNotifier.log";
-        String command = "logcat -d *:e";
+        String command = "logcat -d *:V";
 
         Log.d(TAG, "command: " + command);
 
@@ -243,8 +244,7 @@ public class FetcherService extends Service {
                 Please Note: timerTask runnable is very unpredictable, it stops if certain types
                 of operations are performed with-in this block; like reading/writing to a file!
                  */
-                Log.d(TAG,"Running in the Thread " +
-                        Thread.currentThread().getId());
+                Log.d(TAG,"Running in the Thread " +Thread.currentThread().getId());
                 Document doc = jsoupConnector();
                 if (doc != null) {
                     Elements links = doc.select("tr:not(.shade)");
@@ -254,6 +254,7 @@ public class FetcherService extends Service {
                     for (Element link : links) { //get print of all data
                         Log.i(TAG, "Parsed html:" + link.text());
                     }*/
+
                     Element time_element = links.get(2); //get time element
                     //Log.i(TAG, "Time element: " + time_element.text());
                     Elements tds = time_element.getElementsByTag("td");
@@ -268,8 +269,8 @@ public class FetcherService extends Service {
                                 timeHasChanged = updateTimeAndCheck4Change(date, This);
                                 break;
                             }
-                            break;
                         } catch (ParseException e) {
+                            Log.e(TAG,"FATAL! Couldn't parse updateTime");
                             e.printStackTrace();
                         }
 
@@ -314,23 +315,23 @@ public class FetcherService extends Service {
                                     .replace("(IM_TIME)",
                                             String.valueOf(hm.get(getString(R.string.fetched_min_range_time_k))));
 
-                            send_sms2all = getsmsPriorityPrefVal().equals(getString(R.string.send_all_key));
-                            Log.e(TAG,"Send SMS action value retrieved as: "
-                                    + (send_sms2all? "send to all" : "send to me only"));
                             Log.e(TAG, msg);
                             if (timeHasChanged && (!warn_type.equals("No") || getDebugPrefVal()))
                             {
-                                Thread thread = new Thread(new SendSMS_Thread());
-                                thread.start();
+                                send_sms2all = getsmsPriorityPrefVal().
+                                        equals(getString(R.string.send_all_key));
+                                Log.e(TAG,"Send SMS action value retrieved as: "
+                                        + (send_sms2all? "send to all" : "send to me only"));
+                                sms_thread.start();
                             }
                         }
-                    /*
-                    for (Map.Entry<String, String> me :
+                        Log.i(TAG,"Printing all mapping entires.....");
+                    for (Map.Entry<String, ? super Object> me :
                             hm.entrySet()) {
                         System.out.print(me.getKey() + ":");
                         System.out.println(me.getValue());
                     }
-                 */
+            
                     }
                     else if(!timeHasChanged){ //if this query time is same as last_updated
                         Log.i(TAG,"This query time is same as last updated_time..." +
@@ -371,6 +372,7 @@ public class FetcherService extends Service {
         format_4DISP.setTimeZone(TimeZone.getTimeZone("UTC"));
         format_4PARSNG = new SimpleDateFormat(This.getString(R.string.dateNTimePSRSE_Format), Locale.US);
         format_4PARSNG.setTimeZone(TimeZone.getTimeZone("UTC"));
+        sms_thread = new Thread(new SendSMS_Thread());
         super.onCreate();
     }
 
@@ -383,6 +385,7 @@ public class FetcherService extends Service {
         //unregisterReceiver(br);
         //sendBroadcast("false");
         Log.e(TAG, "Service-OnDestroy()");
+        sms_thread = null;
         setServiceStatus(false);
         super.onDestroy();
     }
@@ -404,7 +407,6 @@ public class FetcherService extends Service {
 */
     public static class SendSMS_Thread implements Runnable {
         public void run() {
-
             SmsManager smsManager = SmsManager.getDefault();
             if (send_sms2all) {
                 for (String number : numbrs) {

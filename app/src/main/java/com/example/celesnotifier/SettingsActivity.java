@@ -1,10 +1,10 @@
 package com.example.celesnotifier;
 
 import static com.example.celesnotifier.R.string.logFileSize_key;
-import static com.example.celesnotifier.R.string.logFileSize_title;
 import static com.example.celesnotifier.R.string.service_status_key;
 import static com.example.celesnotifier.R.string.sms_notif_key;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -17,6 +17,7 @@ import android.view.MenuItem;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.preference.ListPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
@@ -118,6 +119,10 @@ public class SettingsActivity extends AppCompatActivity {
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
+        if(checkSelfPermission(Manifest.permission.SEND_SMS) ==
+                PackageManager.PERMISSION_DENIED )
+            ActivityCompat.requestPermissions(SettingsActivity.this,
+                    new String[] { Manifest.permission.SEND_SMS }, 0);
         //sendQueryBroadcast();
     }
 
@@ -201,7 +206,13 @@ public class SettingsActivity extends AppCompatActivity {
             });
             svc_sw_pref.setOnPreferenceChangeListener((preference, newValue) -> {
                 if((boolean) newValue) {
+                    if(svc_sw_cntxt.checkSelfPermission(Manifest.permission.SEND_SMS) ==
+                            PackageManager.PERMISSION_GRANTED )
                     svc_sw_cntxt.startService(svc_intent);
+                    else{
+                        Log.e(TAG,"SMS_Permission denied at start service button");
+                    }
+
                     Log.i(TAG, "Service Start Button Pressed...");
                 }
                 else{
@@ -240,7 +251,6 @@ public class SettingsActivity extends AppCompatActivity {
             });
 
         }
-
 
 
         @Override
