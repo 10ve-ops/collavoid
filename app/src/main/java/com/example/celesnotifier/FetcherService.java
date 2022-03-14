@@ -42,16 +42,16 @@ public class FetcherService extends Service {
     public static final Float PRSS_NORAD = 43530f;
     public Context This;
     private TimerTask timerTask, flushLog_timerTask;
-    private Date date;
-    private boolean timeHasChanged = false;
+    private static Date date;
+    private static boolean timeHasChanged = false;
     public static final long logIntervals_inHours = 3;
     private final static float maxAllowedLogFileSize = 1024f; //1GB Log allowed
     //private static boolean activity_is_alive = false;
     private static boolean send_sms2all = false;
     private static final ArrayList<String> numbrs = new ArrayList<>();
     private static final long delay_bf_first_exec = 0;
-    Map<String, ? super Object > hm;
-    private static long delay_bw_queries = TimeUnit.MINUTES.toMillis(10);
+    static Map<String, ? super Object > hm;
+    private static long delay_bw_queries = TimeUnit.MINUTES.toMillis(30);
     public static final float yello_warn_thresh = 3.0e-5f, red_warn_thresh = 1.0e-4f,
             yellow_min_range = 2.0f, red_min_range = 0.5f;
     SimpleDateFormat format_4DISP, format_4PARSNG;
@@ -60,7 +60,7 @@ public class FetcherService extends Service {
             "(TYPE) warning of possible collision of PRSS with (DEB). Having probability = (PROB)" +
             ", minimum range = (RNG) km and impact time = (IM_TIME) UTC. \n Thanks & Regards, \n" +
             "M. Wajahat Qureshi\n AM(LSCS-K)";
-    Thread sms_thread;
+
 
 
 
@@ -146,7 +146,6 @@ public class FetcherService extends Service {
 
             BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line;
-            try {
                 File file = new File(filename);
                 float file_size = (file.length()/1024f)/1024f;
                 setLogFileSize(file_size, context);
@@ -182,10 +181,6 @@ public class FetcherService extends Service {
                     Log.i(TAG, "Log update to file done");
 
                 }
-            }
-            catch(IOException e){
-                e.printStackTrace();
-            }
         }
         catch(IOException e){
             e.printStackTrace();
@@ -234,8 +229,6 @@ public class FetcherService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if(getDebugPrefVal())
-            delay_bw_queries = 20000;
         hm = new HashMap<>();
         new Timer().schedule(timerTask = new TimerTask() {
             @Override
@@ -268,10 +261,13 @@ public class FetcherService extends Service {
                             //GMT+05 is not a property of Date obj.
                             //Log.e(TAG,"Parsed Date From Time Element:"+date);
                             //This print statement adds it
-                            Log.e(TAG,"Parsed Date From Time Element:"+
-                                    format_4DISP.format(date));
+
                             if (date != null) {
                                 timeHasChanged = updateTimeAndCheck4Change(date, This);
+                                Log.e(TAG,"Parsed Date From Time Element:"+
+                                        format_4DISP.format(date));
+                            } else{
+                                Log.e(TAG, "FATAL! Parse date was null! Could't parse said date..");
                             }
                         } catch (ParseException e) {
                             Log.e(TAG,"FATAL! updateTime parsing failed");
@@ -317,6 +313,8 @@ public class FetcherService extends Service {
                             Log.e(TAG, msg);
                             if (!warn_type.equals("No") || getDebugPrefVal())
                             {
+                                Thread sms_thread;
+                                sms_thread = new Thread(new SendSMS_Thread());
                                 send_sms2all = getsmsPriorityPrefVal().
                                         equals(getString(R.string.send_all_key));
                                 Log.e(TAG,"Send SMS action value retrieved as: "
@@ -334,7 +332,6 @@ public class FetcherService extends Service {
                     else { //if this query time is same as last_updated
                         Log.i(TAG,"This query time is same as last updated_time..." +
                                 "\n Retrying in "+TimeUnit.MILLISECONDS.toSeconds(delay_bw_queries)+" Seconds...");
-
                     }
                 }
                 else
@@ -371,7 +368,6 @@ public class FetcherService extends Service {
         format_4DISP.setTimeZone(TimeZone.getTimeZone("UTC"));
         format_4PARSNG = new SimpleDateFormat(This.getString(R.string.dateNTimePSRSE_Format), Locale.US);
         format_4PARSNG.setTimeZone(TimeZone.getTimeZone("UTC"));
-        sms_thread = new Thread(new SendSMS_Thread());
         super.onCreate();
     }
 
@@ -384,7 +380,6 @@ public class FetcherService extends Service {
         //unregisterReceiver(br);
         //sendBroadcast("false");
         Log.e(TAG, "Service-OnDestroy()");
-        sms_thread = null;
         setServiceStatus(false);
         super.onDestroy();
     }
