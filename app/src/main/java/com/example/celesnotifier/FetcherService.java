@@ -51,10 +51,10 @@ public class FetcherService extends Service {
     private static final ArrayList<String> numbrs = new ArrayList<>();
     private static final long delay_bf_first_exec = 0;
     static Map<String, ? super Object > hm;
-    private static long delay_bw_queries = TimeUnit.MINUTES.toMillis(30);
+    private static final long delay_bw_queries = TimeUnit.MINUTES.toMillis(30);
     public static final float yello_warn_thresh = 3.0e-5f, red_warn_thresh = 1.0e-4f,
             yellow_min_range = 2.0f, red_min_range = 0.5f;
-    SimpleDateFormat format_4DISP, format_4PARSNG;
+    static SimpleDateFormat format_4DISP, format_4PARSNG;
     public static String msg = "*IMPORTANT MESSAGE*\n As of current celestrak data " +
             "(updated @ (UPDATE_TIME) UTC), this is to inform " +
             "(TYPE) warning of possible collision of PRSS with (DEB). Having probability = (PROB)" +
@@ -207,22 +207,15 @@ public class FetcherService extends Service {
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(This);
         return new Date(pref.getLong(This.getString(R.string.lastUpdated_time), 0));
     }
-    private boolean updateTimeAndCheck4Change(Date thisDate, Context This){
+
+    private static boolean Check4Change(Date thisDate, Context This){
         //compare thisTime with oldTime if oldTime!=0 then return boolean
         // showing that this query is unique w.r.t time
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(This);
         Date prev_date = new Date(pref.getLong(This.getString(R.string.lastUpdated_time), 0));
         Log.e(TAG,"Last update time: "+ format_4DISP.format(prev_date));
         Log.e(TAG,"This query time: "+ format_4DISP.format(thisDate));
-        if (thisDate.after(prev_date))
-        {
-            SharedPreferences.Editor editor = pref.edit();
-            editor.putLong(This.getString(R.string.lastUpdated_time), thisDate.getTime());
-            editor.apply();
-            return true;
-        }
-        else
-            return false;
+        return thisDate.after(prev_date);
     }
 
 
@@ -263,7 +256,7 @@ public class FetcherService extends Service {
                             //This print statement adds it
 
                             if (date != null) {
-                                timeHasChanged = updateTimeAndCheck4Change(date, This);
+                                timeHasChanged = Check4Change(date, This);
                                 Log.e(TAG,"Parsed Date From Time Element:"+
                                         format_4DISP.format(date));
                             } else{
@@ -331,12 +324,14 @@ public class FetcherService extends Service {
                     }
                     else { //if this query time is same as last_updated
                         Log.i(TAG,"This query time is same as last updated_time..." +
-                                "\n Retrying in "+TimeUnit.MILLISECONDS.toSeconds(delay_bw_queries)+" Seconds...");
+                                "\n Retrying in "+TimeUnit.MILLISECONDS.toSeconds(delay_bw_queries)
+                                +" Seconds...");
                     }
                 }
                 else
                     Log.e(TAG, "Can't Connect... Please check internet " +
-                            "\n Retrying in "+TimeUnit.MILLISECONDS.toSeconds(delay_bw_queries)+" Seconds...");
+                            "\n Retrying in "+TimeUnit.MILLISECONDS.toSeconds(delay_bw_queries)
+                            +" Seconds...");
             }
         }, delay_bf_first_exec,delay_bw_queries);
 
@@ -399,7 +394,7 @@ public class FetcherService extends Service {
         sendBroadcast(intent1);
     }
 */
-    public static class SendSMS_Thread implements Runnable {
+    public  class SendSMS_Thread implements Runnable {
         public void run() {
             SmsManager smsManager = SmsManager.getDefault();
             if (send_sms2all) {
@@ -414,7 +409,13 @@ public class FetcherService extends Service {
                         null);
                 Log.e(TAG, "Sending sms...");
             }
+            //edit changes after sms is sent so as to avoid storing times when sms fault occurred
+            SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(This);
+            SharedPreferences.Editor editor = pref.edit();
+            editor.putLong(This.getString(R.string.lastUpdated_time), date.getTime());
+            editor.apply();
         }
+
 
 
 }
