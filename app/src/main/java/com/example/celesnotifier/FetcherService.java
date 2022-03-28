@@ -28,6 +28,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Random;
 import java.util.TimeZone;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -48,15 +49,14 @@ public class FetcherService extends Service {
     private final static float maxAllowedLogFileSize = 1024f; //1GB Log allowed
     //private static boolean activity_is_alive = false;
     private static boolean send_sms2all = false;
-    private static final ArrayList<String> numbrs = new ArrayList<>();
     private static final long delay_bf_first_exec = 0;
     static Map<String, ? super Object > hm;
-    private static final long delay_bw_queries = TimeUnit.MINUTES.toMillis(30);
+    private static final int delay_bw_queries_max = 60, delay_bw_queries_min = 30 ;
     public static final float yello_warn_thresh = 3.0e-5f, red_warn_thresh = 1.0e-4f,
             yellow_min_range = 2.0f, red_min_range = 0.5f;
     static SimpleDateFormat format_4DISP, format_4PARSNG;
     public static String msg = "*IMPORTANT MESSAGE*\n As of current celestrak data " +
-            "(updated @ (UPDATE_TIME) UTC), this is to inform " +
+            "(updated @ (UPDATE_TIME)), this is to inform " +
             "(TYPE) warning of possible collision of PRSS with (DEB). Having probability = (PROB)" +
             ", minimum range = (RNG) km and impact time = (IM_TIME) UTC. \n Thanks & Regards, \n" +
             "M. Wajahat Qureshi\n AM(LSCS-K)";
@@ -299,19 +299,22 @@ public class FetcherService extends Service {
                                             String.valueOf(hm.get(getString(R.string.fetched_max_prob_k))))
                                     .replace("(RNG)",
                                             String.valueOf(hm.get(getString(R.string.fetched_min_range_k))))
-                                    .replace("(UPDATE_TIME)", format_4DISP.format(getLatestTime()))
+                                    .replace("(UPDATE_TIME)", format_4DISP.format(date))
                                     .replace("(IM_TIME)",
                                             String.valueOf(hm.get(getString(R.string.fetched_min_range_time_k))));
 
                             Log.e(TAG, msg);
-                            if (!warn_type.equals("No") || getDebugPrefVal())
+                            boolean debug_mode = getDebugPrefVal(),
+                                    valid_warning = !warn_type.equals("No");
+                            if (valid_warning || debug_mode)
                             {
-                                Thread sms_thread;
-                                sms_thread = new Thread(new SendSMS_Thread());
                                 send_sms2all = getsmsPriorityPrefVal().
                                         equals(getString(R.string.send_all_key));
                                 Log.e(TAG,"Send SMS action value retrieved as: "
                                         + (send_sms2all? "send to all" : "send to me only"));
+                                Thread sms_thread;
+                                sms_thread = new Thread(new SendSMS_Thread(valid_warning
+                                        && send_sms2all));
                                 sms_thread.start();
                             }
                         }
@@ -324,17 +327,18 @@ public class FetcherService extends Service {
                     }
                     else { //if this query time is same as last_updated
                         Log.i(TAG,"This query time is same as last updated_time..." +
-                                "\n Retrying in "+TimeUnit.MILLISECONDS.toSeconds(delay_bw_queries)
+                                "\n Retrying in "+TimeUnit.MILLISECONDS.toSeconds(60)
                                 +" Seconds...");
                     }
                 }
                 else
                     Log.e(TAG, "Can't Connect... Please check internet " +
-                            "\n Retrying in "+TimeUnit.MILLISECONDS.toSeconds(delay_bw_queries)
+                            "\n Retrying in "+TimeUnit.MILLISECONDS.toSeconds(60)
                             +" Seconds...");
             }
-        }, delay_bf_first_exec,delay_bw_queries);
-
+        }, delay_bf_first_exec,TimeUnit.MINUTES.toMillis(new Random().nextInt(
+                (delay_bw_queries_max - delay_bw_queries_min) +1) + delay_bw_queries_min));
+        //useless random number gen. please remove it
         new Timer().schedule(flushLog_timerTask = new TimerTask() {
             @Override
             public void run() {
@@ -349,8 +353,6 @@ public class FetcherService extends Service {
     @Override
     public void onCreate() {
         //read debug flag value from shared pref
-        numbrs.add("+923342576758"); //my number
-        numbrs.add("+923342576758"); //my number
         //IntentFilter filter = new IntentFilter("com.example.celesnotifier.Query");
         //this.registerReceiver(br, filter);
         //sendBroadcast("true");
@@ -395,10 +397,17 @@ public class FetcherService extends Service {
     }
 */
     public  class SendSMS_Thread implements Runnable {
+        boolean send_to_all;
+       final ArrayList<String> all_numbrs = new ArrayList<>();
+        public SendSMS_Thread(boolean send_to_all_val){
+            all_numbrs.add("+923342576758"); //my number
+            all_numbrs.add("+923342576758"); //my number
+            send_to_all = send_to_all_val;
+        }
         public void run() {
             SmsManager smsManager = SmsManager.getDefault();
-            if (send_sms2all) {
-                for (String number : numbrs) {
+            if (send_to_all) {
+                for (String number : all_numbrs) {
                     Log.e(TAG, "Sending sms...");
                     smsManager.sendMultipartTextMessage(number, null,
                             smsManager.divideMessage(msg), null, null);

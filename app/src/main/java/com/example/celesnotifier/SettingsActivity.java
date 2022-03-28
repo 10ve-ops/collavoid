@@ -21,6 +21,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.preference.ListPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
+import androidx.preference.SwitchPreference;
 
 import java.text.DecimalFormat;
 
@@ -64,7 +65,7 @@ public class SettingsActivity extends AppCompatActivity {
     }
         */
 
-    public static void setPrefVal(Context appContxt , Boolean val, String send_sms_val){
+    public static void set_Debug_sendAction_pref(Context appContxt , Boolean val, String send_sms_val){
         SharedPreferences my_pref = appContxt.getSharedPreferences(appContxt.getString(R.string.debug_status_prefFileName)
             , MODE_PRIVATE);
         SharedPreferences.Editor editor = my_pref.edit();
@@ -181,13 +182,14 @@ public class SettingsActivity extends AppCompatActivity {
 
         Context svc_sw_cntxt;
         Intent svc_intent;
+        SwitchPreference svc_sw_pref;
 
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey);
             ListPreference sms_send_pref = findPreference(getString(R.string.send_key));
             Preference signature = findPreference(getString(R.string.signature_key));
-            Preference svc_sw_pref = findPreference(getString(service_status_key));
+            svc_sw_pref = findPreference(getString(service_status_key));
             Preference logFileSize_pref = findPreference(getString(logFileSize_key));
             assert logFileSize_pref != null;
             logFileSize_pref.setSummary(new DecimalFormat("0000.00").format(getLogFileSize
@@ -201,7 +203,7 @@ public class SettingsActivity extends AppCompatActivity {
             Preference sms_notif_pref = findPreference(getString(R.string.sms_notif_key));
             assert sms_notif_pref != null;
             sms_notif_pref.setOnPreferenceChangeListener((preference, newValue) -> {
-                setPrefVal(svc_sw_cntxt, (boolean) newValue, null);
+                set_Debug_sendAction_pref(svc_sw_cntxt, (boolean) newValue, null);
                 return true;
             });
             svc_sw_pref.setOnPreferenceChangeListener((preference, newValue) -> {
@@ -224,10 +226,11 @@ public class SettingsActivity extends AppCompatActivity {
             });
             SharedPreferences sms_notif_sharedPref = sms_notif_pref.getSharedPreferences();
             boolean val = sms_notif_sharedPref.getBoolean(getString(sms_notif_key), false);
-            setPrefVal(svc_sw_cntxt,val, null);
+            set_Debug_sendAction_pref(svc_sw_cntxt,val, null);
 
             assert sms_send_pref != null;
-            setPrefVal(svc_sw_cntxt,null,sms_send_pref.getValue());
+            set_Debug_sendAction_pref(svc_sw_cntxt,null,sms_send_pref.getValue()); // redundant operation to be
+            //replaced with original keys used by this pref
 
             assert signature != null;
 
@@ -252,10 +255,17 @@ public class SettingsActivity extends AppCompatActivity {
 
         }
 
+        @Override
+        public void onStart() {
+            if(!getServiceStatus(svc_sw_cntxt))
+            svc_sw_pref.setChecked(false);
+            super.onStart();
+        }
+
 
         @Override
         public boolean onPreferenceTreeClick(Preference preference) {
-           //Log.e(TAG," Selected Preference from Tree  >> "+ preference.getKey());
+           Log.e(TAG," Selected Preference from Tree  >> "+ preference.getKey());
             return super.onPreferenceTreeClick(preference);
         }
 

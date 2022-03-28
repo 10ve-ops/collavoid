@@ -19,13 +19,13 @@
 
     <PreferenceCategory app:title="@string/service_header">
 
-        <SwitchPreferenceCompat
+        <SwitchPreference
             app:key="@string/service_status_key"
             app:title="@string/service_status"
             app:switchTextOn="Running"
             app:switchTextOff="Stoppped"/>
 
-        <SwitchPreferenceCompat
+        <SwitchPreference
             app:key="@string/sms_notif_key"
             app:summaryOff="@string/sms_notification_summary_off"
             app:summaryOn="@string/sms_notification_summary_on"
