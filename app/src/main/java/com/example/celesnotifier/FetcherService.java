@@ -8,13 +8,16 @@ import android.content.pm.PackageManager;
 import android.os.IBinder;
 import android.telephony.SmsManager;
 import android.util.Log;
+
 import androidx.annotation.Nullable;
 import androidx.preference.PreferenceManager;
+
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
@@ -28,7 +31,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Random;
 import java.util.TimeZone;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -40,7 +42,6 @@ public class FetcherService extends Service {
     public static final String URL = "https://celestrak.com/SOCRATES/search-results.php?IDENT" +
             "=NAME&NAME_TEXT1=PRSS&NAME_TEXT2=&CATNR_TEXT1=&CATNR_TEXT2" +
             "=&ORDER=MAXPROB&MAX=25&B1=Submit";
-    public static final Float PRSS_NORAD = 43530f;
     public Context This;
     private TimerTask timerTask, flushLog_timerTask;
     private static Date date;
@@ -50,14 +51,14 @@ public class FetcherService extends Service {
     //private static boolean activity_is_alive = false;
     private static boolean send_sms2all = false;
     private static final long delay_bf_first_exec = 0;
-    static Map<String, ? super Object > hm;
-    private static final int delay_bw_queries_max = 60, delay_bw_queries_min = 30 ;
+    static Map<String, ? super Object > results;
+    private static final int delay_bw_queries_inMinutes = 40;
     public static final float yello_warn_thresh = 3.0e-5f, red_warn_thresh = 1.0e-4f,
             yellow_min_range = 2.0f, red_min_range = 0.5f;
     static SimpleDateFormat format_4DISP, format_4PARSNG;
     public static String msg = "*IMPORTANT MESSAGE*\n As of current celestrak data " +
             "(updated @ (UPDATE_TIME)), this is to inform " +
-            "(TYPE) warning of possible collision of PRSS with (DEB). Having probability = (PROB)" +
+            "(TYPE) warning of possible collision of (obj1) with (obj2). Having probability = (PROB)" +
             ", minimum range = (RNG) km and impact time = (IM_TIME) UTC. \n Thanks & Regards, \n" +
             "M. Wajahat Qureshi\n AM(LSCS-K)";
 
@@ -208,9 +209,7 @@ public class FetcherService extends Service {
         return new Date(pref.getLong(This.getString(R.string.lastUpdated_time), 0));
     }
 
-    private static boolean Check4Change(Date thisDate, Context This){
-        //compare thisTime with oldTime if oldTime!=0 then return boolean
-        // showing that this query is unique w.r.t time
+    private static boolean check4Change(Date thisDate, Context This){
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(This);
         Date prev_date = new Date(pref.getLong(This.getString(R.string.lastUpdated_time), 0));
         Log.e(TAG,"Last update time: "+ format_4DISP.format(prev_date));
@@ -222,7 +221,7 @@ public class FetcherService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        hm = new HashMap<>();
+        results = new HashMap<>();
         new Timer().schedule(timerTask = new TimerTask() {
             @Override
             public void run() {
@@ -256,7 +255,7 @@ public class FetcherService extends Service {
                             //This print statement adds it
 
                             if (date != null) {
-                                timeHasChanged = Check4Change(date, This);
+                                timeHasChanged = check4Change(date, This);
                                 Log.e(TAG,"Parsed Date From Time Element:"+
                                         format_4DISP.format(date));
                             } else{
@@ -267,41 +266,40 @@ public class FetcherService extends Service {
                             e.printStackTrace();
                         }
 
-                    Log.e(TAG,"timehaschanged and debug: "+ timeHasChanged+" "+ getDebugPrefVal());
+                    Log.e(TAG,"timehaschanged:  "+ timeHasChanged+" \n debug mode: "+ getDebugPrefVal());
                     if(timeHasChanged) {
                         Element el_1 = links.get(3); //get first row of results table
                         Element el_2 = links.get(4); //get second row of results table
                         Elements el1tds = el_1.getElementsByTag("td");
                         Elements el2tds = el_2.getElementsByTag("td");
-                        hm.put(getString(R.string.fetched_prss_norad_k), Float.valueOf(el1tds.get(1).text()));
-                        hm.put(getString(R.string.fetched_max_prob_k), Float.valueOf(el1tds.get(4).text()));
-                        hm.put(getString(R.string.fetched_min_range_k), Float.valueOf(el1tds.get(6).text()));
-                        hm.put(getString(R.string.fetched_rel_vel_k), Float.valueOf(el1tds.get(7).text()));
-                        hm.put(getString(R.string.fetched_deb_norad_k), Float.valueOf(el2tds.get(0).text()));
-                        hm.put(getString(R.string.fetched_deb_name_k), el2tds.get(1).text());
-                        hm.put(getString(R.string.fetched_min_range_time_k), el2tds.get(5).text());
-                        if (!PRSS_NORAD.equals(hm.get(getString(R.string.fetched_prss_norad_k))))
-                            Log.e(TAG, "PARSING ERROR! at table elements parsing");
-                        else {
+                        results.put(getString(R.string.obj1_norad), Float.valueOf(el1tds.get(1).text()));
+                        results.put(getString(R.string.obj1_name), el1tds.get(2).text());
+                        results.put(getString(R.string.max_prob), Float.valueOf(el1tds.get(4).text()));
+                        results.put(getString(R.string.min_range), Float.valueOf(el1tds.get(6).text()));
+                        results.put(getString(R.string.rel_vel), Float.valueOf(el1tds.get(7).text()));
+                        results.put(getString(R.string.obj2_norad), Float.valueOf(el2tds.get(0).text()));
+                        results.put(getString(R.string.obj2_name), el2tds.get(1).text());
+                        results.put(getString(R.string.TCA), el2tds.get(5).text());
                             //noinspection ConstantConditions
-                            if ((Float) hm.get(getString(R.string.fetched_min_range_k)) <=
-                                    red_min_range && (Float) hm.get(getResources().getString(R.string.fetched_max_prob_k)) >= red_warn_thresh)
+                            if ((Float) results.get(getString(R.string.min_range)) <=
+                                    red_min_range && (Float) results.get(getResources().getString(R.string.max_prob)) >= red_warn_thresh)
                                 warn_type = "RED";
                             else //noinspection ConstantConditions
-                                if ((Float) hm.get(getResources().getString(R.string.fetched_max_prob_k)) <= yellow_min_range
-                                        && (Float) hm.get(getString(R.string.fetched_max_prob_k)) >= yello_warn_thresh)
+                                if ((Float) results.get(getResources().getString(R.string.max_prob)) <= yellow_min_range
+                                        && (Float) results.get(getString(R.string.max_prob)) >= yello_warn_thresh)
                                     warn_type = "YELLOW";
                                 else warn_type = "No";
                             msg = msg.replace("(TYPE)", warn_type.equals("No") ? "that there is no" :
-                                    warn_type).replace("(DEB)",
-                                    String.valueOf(hm.get(getString(R.string.fetched_deb_name_k))))
+                                    warn_type).replace("(obj2)",
+                                    String.valueOf(results.get(getString(R.string.obj1_name))))
                                     .replace("(PROB)",
-                                            String.valueOf(hm.get(getString(R.string.fetched_max_prob_k))))
+                                            String.valueOf(results.get(getString(R.string.max_prob))))
                                     .replace("(RNG)",
-                                            String.valueOf(hm.get(getString(R.string.fetched_min_range_k))))
+                                            String.valueOf(results.get(getString(R.string.min_range))))
                                     .replace("(UPDATE_TIME)", format_4DISP.format(date))
                                     .replace("(IM_TIME)",
-                                            String.valueOf(hm.get(getString(R.string.fetched_min_range_time_k))));
+                                            String.valueOf(results.get(getString(R.string.TCA))))
+                            .replace("(obj1)", String.valueOf(results.get(getString(R.string.obj2_name))));
 
                             Log.e(TAG, msg);
                             boolean debug_mode = getDebugPrefVal(),
@@ -317,27 +315,25 @@ public class FetcherService extends Service {
                                         && send_sms2all));
                                 sms_thread.start();
                             }
-                        }
                         Log.i(TAG,"Printing all mapping entires.....");
                         for (Map.Entry<String, ? super Object> me :
-                                hm.entrySet()) {
+                                results.entrySet()) {
                             System.out.print(me.getKey() + ":");
                             System.out.println(me.getValue());
                         }
                     }
                     else { //if this query time is same as last_updated
                         Log.i(TAG,"This query time is same as last updated_time..." +
-                                "\n Retrying in "+TimeUnit.MILLISECONDS.toSeconds(60)
-                                +" Seconds...");
+                                "\n Retrying in "+ delay_bw_queries_inMinutes
+                                +" minutes...");
                     }
                 }
                 else
                     Log.e(TAG, "Can't Connect... Please check internet " +
-                            "\n Retrying in "+TimeUnit.MILLISECONDS.toSeconds(60)
-                            +" Seconds...");
+                            "\n Retrying in "+ delay_bw_queries_inMinutes
+                            +" minutes...");
             }
-        }, delay_bf_first_exec,TimeUnit.MINUTES.toMillis(new Random().nextInt(
-                (delay_bw_queries_max - delay_bw_queries_min) +1) + delay_bw_queries_min));
+        }, delay_bf_first_exec,TimeUnit.MINUTES.toMillis(delay_bw_queries_inMinutes));
         //useless random number gen. please remove it
         new Timer().schedule(flushLog_timerTask = new TimerTask() {
             @Override
