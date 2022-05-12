@@ -18,6 +18,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.preference.ListPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
@@ -210,7 +211,7 @@ public class SettingsActivity extends AppCompatActivity {
                 if((boolean) newValue) {
                     if(svc_sw_cntxt.checkSelfPermission(Manifest.permission.SEND_SMS) ==
                             PackageManager.PERMISSION_GRANTED )
-                    svc_sw_cntxt.startService(svc_intent);
+                    ContextCompat.startForegroundService(svc_sw_cntxt, svc_intent);
                     else{
                         Log.e(TAG,"SMS_Permission denied at start service button");
                     }

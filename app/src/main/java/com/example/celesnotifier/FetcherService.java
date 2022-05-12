@@ -1,5 +1,9 @@
 package com.example.celesnotifier;
 
+import static com.example.celesnotifier.App.CHANNEL_ID;
+
+import android.app.Notification;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -10,6 +14,7 @@ import android.telephony.SmsManager;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
+import androidx.core.app.NotificationCompat;
 import androidx.preference.PreferenceManager;
 
 import org.jsoup.Connection;
@@ -47,8 +52,7 @@ public class FetcherService extends Service {
     private static Date date;
     private static boolean timeHasChanged = false;
     public static final long logIntervals_inHours = 3;
-    private final static float maxAllowedLogFileSize = 1024f; //1GB Log allowed
-    //private static boolean activity_is_alive = false;
+    private final static float maxAllowedLogFileSize = 1024f; //1GB
     private static boolean send_sms2all = false;
     private static final long delay_bf_first_exec = 0;
     static Map<String, ? super Object > results;
@@ -61,36 +65,6 @@ public class FetcherService extends Service {
             "(TYPE) warning of possible collision of (obj1) with (obj2). Having probability = (PROB)" +
             ", minimum range = (RNG) km and impact time = (IM_TIME) UTC. \n Thanks & Regards, \n" +
             "M. Wajahat Qureshi\n AM(LSCS-K)";
-
-
-
-
-/*
-    BroadcastReceiver br = new MyBroadcastReceiver();
-    public class MyBroadcastReceiver extends BroadcastReceiver {
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if ("com.example.celesnotifier.Query".equals(intent.getAction())) {
-                //get notification sw status first
-                String receivedText = intent.getStringExtra("notification_switch");
-                Log.e(TAG,"In fetcher.service " +
-                        "broadcast receiver Got sms_notif_status = "+receivedText);
-                if(receivedText!=null)
-                sms_notif_status = Boolean.parseBoolean(receivedText);
-                activity_is_alive = true;
-                String receivedText2 = intent.getStringExtra("dead");
-                if(receivedText2 != null)
-                activity_is_alive = false;
-                Intent intent1 = new Intent();
-                intent1.setAction("com.example.celesnotifier.FETCHER_SERVICE");
-                intent1.putExtra("status", "true");
-                intent1.setPackage("com.example.celesnotifier");
-                sendBroadcast(intent1);
-            }
-        }
-    }*/   //BRs commented out for future use
-
 
     public String getsmsPriorityPrefVal(){
         String priority = null;
@@ -221,6 +195,22 @@ public class FetcherService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+
+        Intent notificationIntent = new Intent(this, SettingsActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this,
+                0, notificationIntent, 0);
+
+        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setContentTitle("CelesNotifier")
+                .setContentText("Logging results in every"+ logIntervals_inHours + " Hrs")
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setContentIntent(pendingIntent)
+                .build();
+
+        startForeground(1, notification);
+
+        //do heavy work on a background thread
+        //stopSelf();
         results = new HashMap<>();
         new Timer().schedule(timerTask = new TimerTask() {
             @Override
@@ -334,7 +324,7 @@ public class FetcherService extends Service {
                             +" minutes...");
             }
         }, delay_bf_first_exec,TimeUnit.MINUTES.toMillis(delay_bw_queries_inMinutes));
-        //useless random number gen. please remove it
+
         new Timer().schedule(flushLog_timerTask = new TimerTask() {
             @Override
             public void run() {
@@ -383,15 +373,6 @@ public class FetcherService extends Service {
         return null;
     }
 
-   /* private void sendBroadcast(String status){ //status = "true" when service
-        // is started and vice versa
-        Intent intent1 = new Intent();
-        intent1.setAction("com.example.celesnotifier.FETCHER_SERVICE");
-        intent1.putExtra("status", status);
-        intent1.setPackage("com.example.celesnotifier");
-        sendBroadcast(intent1);
-    }
-*/
     public  class SendSMS_Thread implements Runnable {
         boolean send_to_all;
        final ArrayList<String> all_numbrs = new ArrayList<>();
