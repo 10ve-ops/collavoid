@@ -7,6 +7,13 @@
             app:title="@string/signature_title"
             app:useSimpleSummaryProvider="true" />
 
+        <Preference
+            app:key="@string/latest_result_key"
+            app:selectable="true"
+            app:persistent="true"
+            app:title="@string/lat_res_title"
+            app:useSimpleSummaryProvider="true"/>
+
         <ListPreference
             app:defaultValue="send"
             app:entries="@array/send_entries"

@@ -5,9 +5,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.telephony.SmsManager;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.preference.PreferenceManager;
@@ -133,6 +136,15 @@ public class FetcherService extends Service {
         editor.putFloat(context.getString(R.string.logFileSize_key), size);
         editor.apply();
     }
+    public static void setLatRes(String msg, Context context){
+        SharedPreferences my_pref = context.getSharedPreferences(context.
+                        getString(R.string.latest_result_key)
+                , MODE_PRIVATE);
+        SharedPreferences.Editor editor = my_pref.edit();
+        editor.putString(context.getString(R.string.latest_result_key), msg);
+        editor.apply();
+    }
+
 
 
     public static void printLog(Context context){
@@ -203,10 +215,6 @@ public class FetcherService extends Service {
             }
             else return null;
         }
-    }
-    private Date getLatestTime(){
-        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(This);
-        return new Date(pref.getLong(This.getString(R.string.lastUpdated_time), 0));
     }
 
     private static boolean check4Change(Date thisDate, Context This){
@@ -302,11 +310,15 @@ public class FetcherService extends Service {
                             .replace("(obj1)", String.valueOf(results.get(getString(R.string.obj2_name))));
 
                             Log.e(TAG, msg);
+                            setLatRes(msg, This);
                             boolean debug_mode = getDebugPrefVal(),
                                     valid_warning = !warn_type.equals("No");
+                            String smsPrefVal = getsmsPriorityPrefVal();
+
+                            if(!smsPrefVal.equals(getString(R.string.dont_send_key))){
                             if (valid_warning || debug_mode)
                             {
-                                send_sms2all = getsmsPriorityPrefVal().
+                                send_sms2all = smsPrefVal.
                                         equals(getString(R.string.send_all_key));
                                 Log.e(TAG,"Send SMS action value retrieved as: "
                                         + (send_sms2all? "send to all" : "send to me only"));
@@ -314,7 +326,7 @@ public class FetcherService extends Service {
                                 sms_thread = new Thread(new SendSMS_Thread(valid_warning
                                         && send_sms2all));
                                 sms_thread.start();
-                            }
+                            }}
                         Log.i(TAG,"Printing all mapping entires.....");
                         for (Map.Entry<String, ? super Object> me :
                                 results.entrySet()) {
@@ -381,6 +393,12 @@ public class FetcherService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         return null;
+    }
+
+    public void dispToastFrmSvc(String msg){
+        new Handler(Looper.getMainLooper()).post(() ->
+                Toast.makeText(FetcherService.this.getApplicationContext()
+                        ,msg,Toast.LENGTH_LONG).show());
     }
 
    /* private void sendBroadcast(String status){ //status = "true" when service

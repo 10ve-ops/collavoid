@@ -3,10 +3,12 @@
     <string-array name="send_entries">
         <item>Send to me only</item>
         <item>Send to all</item>
+        <item>Don\'t send SMS</item>
     </string-array>
 
     <string-array name="send_values">
         <item>@string/send_me_key</item>
         <item>@string/send_all_key</item>
+        <item>@string/dont_send_key</item>
     </string-array>
 </resources>

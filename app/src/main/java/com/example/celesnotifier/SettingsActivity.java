@@ -102,6 +102,19 @@ public class SettingsActivity extends AppCompatActivity {
         }
         return size;
     }
+    public static String getLatRes(Context cntxt){
+        String msg = " ";
+        try {
+            Context con = cntxt.createPackageContext("com.example.celesnotifier", 0);
+            SharedPreferences pref = con.getSharedPreferences(
+                    cntxt.getString(R.string.latest_result_key), Context.MODE_PRIVATE);
+            msg = pref.getString(cntxt.getString(R.string.latest_result_key), " ");
+
+        } catch (PackageManager.NameNotFoundException e) {
+            Log.e("Not data shared", e.toString());
+        }
+        return msg;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -187,6 +200,9 @@ public class SettingsActivity extends AppCompatActivity {
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey);
+            Preference latResPref = findPreference(getString(R.string.latest_result_key));
+            assert latResPref != null;
+            latResPref.setSummary(getLatRes(latResPref.getContext()));
             ListPreference sms_send_pref = findPreference(getString(R.string.send_key));
             Preference signature = findPreference(getString(R.string.signature_key));
             svc_sw_pref = findPreference(getString(service_status_key));
@@ -225,6 +241,7 @@ public class SettingsActivity extends AppCompatActivity {
                 return true;
             });
             SharedPreferences sms_notif_sharedPref = sms_notif_pref.getSharedPreferences();
+            assert sms_notif_sharedPref != null;
             boolean val = sms_notif_sharedPref.getBoolean(getString(sms_notif_key), false);
             set_Debug_sendAction_pref(svc_sw_cntxt,val, null);
 
@@ -233,8 +250,8 @@ public class SettingsActivity extends AppCompatActivity {
             //replaced with original keys used by this pref
 
             assert signature != null;
-
             SharedPreferences sign_sharedPref = signature.getSharedPreferences();
+            assert sign_sharedPref != null;
             SharedPreferences.Editor sign_editor = sign_sharedPref.edit();
             if(sign_sharedPref.getString(getString(R.string.signature_key), null) == null
                     || sign_sharedPref.getString(getString(R.string.signature_key), null)
