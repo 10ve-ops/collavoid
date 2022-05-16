@@ -19,7 +19,7 @@ public class App extends Application {
                 NotificationChannel serviceChannel = new NotificationChannel(
                         CHANNEL_ID,
                         "Celes notifier",
-                        NotificationManager.IMPORTANCE_HIGH
+                        NotificationManager.IMPORTANCE_DEFAULT
                 );
                 NotificationManager manager = getSystemService(NotificationManager.class);
                 manager.createNotificationChannel(serviceChannel);

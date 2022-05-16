@@ -210,12 +210,12 @@ public class FetcherService extends Service {
 
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("CelesNotifier")
-                .setContentText("Logging results in every"+ logIntervals_inHours + " Hrs")
-                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setContentText("Logging results in every "+ delay_bw_queries_inMinutes + " minutes")
+                .setSmallIcon(R.mipmap.ic_launcher_foreground)
                 .setContentIntent(pendingIntent)
                 .build();
 
-        startForeground(1, notification);
+        startForeground(23, notification);
 
         //do heavy work on a background thread
         //stopSelf();

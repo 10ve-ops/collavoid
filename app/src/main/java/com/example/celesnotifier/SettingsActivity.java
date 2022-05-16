@@ -5,6 +5,7 @@ import static com.example.celesnotifier.R.string.service_status_key;
 import static com.example.celesnotifier.R.string.sms_notif_key;
 
 import android.Manifest;
+import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
