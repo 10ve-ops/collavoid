@@ -3,6 +3,7 @@ package com.example.celesnotifier;
 import static com.example.celesnotifier.App.CHANNEL_ID;
 
 import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
@@ -59,7 +60,7 @@ public class FetcherService extends Service {
     private static boolean send_sms2all = false;
     private static final long delay_bf_first_exec = 0;
     static Map<String, ? super Object > results;
-    private static final int delay_bw_queries_inMinutes = 40;
+    private static final int delay_bw_queries_inMinutes = 40, mNotifChannel_ID = 43;
     public static final float yello_warn_thresh = 3.0e-5f, red_warn_thresh = 1.0e-4f,
             yellow_min_range = 2.0f, red_min_range = 0.5f;
     static SimpleDateFormat format_4DISP, format_4PARSNG;
@@ -118,7 +119,7 @@ public class FetcherService extends Service {
         editor.putString(context.getString(R.string.latest_result_key), msg);
         editor.apply();
     }
-
+    private Notification.Builder mBuilder;
 
 
     public static void printLog(Context context){
@@ -208,14 +209,14 @@ public class FetcherService extends Service {
         PendingIntent pendingIntent = PendingIntent.getActivity(this,
                 0, notificationIntent, 0);
 
-        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
+        mBuilder = new Notification.Builder(this, CHANNEL_ID)
                 .setContentTitle("CelesNotifier")
                 .setContentText("Logging results in every "+ delay_bw_queries_inMinutes + " minutes")
                 .setSmallIcon(R.mipmap.ic_launcher_foreground)
-                .setContentIntent(pendingIntent)
-                .build();
+                .setContentIntent(pendingIntent);
+        Notification notification = mBuilder.build();
 
-        startForeground(23, notification);
+        startForeground(mNotifChannel_ID, notification);
 
         //do heavy work on a background thread
         //stopSelf();
@@ -334,6 +335,14 @@ public class FetcherService extends Service {
                     Log.e(TAG, "Can't Connect... Please check internet " +
                             "\n Retrying in "+ delay_bw_queries_inMinutes
                             +" minutes...");
+
+                long time = Calendar.getInstance().getTimeInMillis()
+                        + (delay_bw_queries_inMinutes * 60 * 1000);
+                mBuilder.setContentText("Next query at "+
+                        new SimpleDateFormat(getString(R.string.timeDisp_Format),
+                        Locale.getDefault()).format(time));
+                getSystemService(NotificationManager.class).notify(mNotifChannel_ID,
+                        mBuilder.build());
             }
         }, delay_bf_first_exec,TimeUnit.MINUTES.toMillis(delay_bw_queries_inMinutes));
 

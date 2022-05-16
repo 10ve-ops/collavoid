@@ -39,6 +39,7 @@
     <string name="lastUpdated_time">last_update_time</string>
     <string name="send_sharedPref_key">jkznxckznx545</string>
     <string name="dateNTimePSRSE_Format">yyyy MMM dd HH:mm</string>
+    <string name="timeDisp_Format">MMM dd hh:mm aa</string>
     <string name="dateNTimeSMS_Format">EEE MMM dd yyyy HH:mm z</string>
     <string name="obj1_norad">prss_norad</string>
     <string name="max_prob">max_prob</string>
