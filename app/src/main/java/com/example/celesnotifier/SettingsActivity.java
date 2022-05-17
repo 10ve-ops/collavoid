@@ -5,7 +5,6 @@ import static com.example.celesnotifier.R.string.service_status_key;
 import static com.example.celesnotifier.R.string.sms_notif_key;
 
 import android.Manifest;
-import android.app.Application;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -115,7 +114,7 @@ public class SettingsActivity extends AppCompatActivity {
             msg = pref.getString(cntxt.getString(R.string.latest_result_key), " ");
 
         } catch (PackageManager.NameNotFoundException e) {
-            Log.e("Not data shared", e.toString());
+            Log.e("No data shared", e.toString());
         }
         return msg;
     }
@@ -257,20 +256,18 @@ public class SettingsActivity extends AppCompatActivity {
             SharedPreferences sign_sharedPref = signature.getSharedPreferences();
             assert sign_sharedPref != null;
             SharedPreferences.Editor sign_editor = sign_sharedPref.edit();
-            if(sign_sharedPref.getString(getString(R.string.signature_key), null) == null
-                    || sign_sharedPref.getString(getString(R.string.signature_key), null)
-                    .equals("")
-            || sign_sharedPref.getString(getString(R.string.signature_key), null).equals(" ")){
-                sign_editor.putString(getString(R.string.signature_key), FetcherService.msg);
-                //setting default signature
+            String sign_val = sign_sharedPref.getString(getString(R.string.signature_key), null);
+            if(sign_val == null || sign_val.equals("") || sign_val.equals(" ")){
+                sign_editor.putString(getString(R.string.signature_key), Parser.default_sign);
                 sign_editor.apply();
-                signature.callChangeListener(FetcherService.msg);
+                signature.callChangeListener(Parser.default_sign);
             }
             signature.setOnPreferenceChangeListener((preference, newValue) -> {
                 //getting user modified signature
                 //Log.e(TAG,"sign.changelistener val: "+(String) newValue);
-                FetcherService.msg = (String) newValue;
-                sign_editor.putString(getString(R.string.signature_key), FetcherService.msg);
+                if(!Parser.getCurrentMsgSign().equals(Parser.default_sign))
+                Parser.setdefault_sign((String) newValue);
+                sign_editor.putString(getString(R.string.signature_key), Parser.getCurrentMsgSign());
                 return true;
             });
 

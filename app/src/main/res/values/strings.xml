@@ -10,7 +10,7 @@
     <!-- Messages Preferences -->
     <string name="signature_title">SMS Signature</string>
     <string name="send_title">SMS Preference</string>
-    <string name="signature_key">signature45dfg</string>
+    <string name="signature_key">sms signature</string>
     <string name="send_key">SMS Preference</string>
     <string name="send_me_key">send 2 me only</string>
     <string name="send_all_key">send all</string>
