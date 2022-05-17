@@ -5,17 +5,24 @@ import static com.example.celesnotifier.R.string.service_status_key;
 import static com.example.celesnotifier.R.string.sms_notif_key;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.PersistableBundle;
 import android.util.Log;
 import android.view.MenuItem;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
@@ -31,6 +38,7 @@ import java.text.DecimalFormat;
 public class SettingsActivity extends AppCompatActivity {
     public static String TAG = "CelesNotifier";
     Context This;
+    private static String ringtone_URI;
     //private static boolean sms_notif_status;
     /* //for future use
     public static boolean service_status = false;
@@ -79,6 +87,8 @@ public class SettingsActivity extends AppCompatActivity {
         editor.apply();
         //Log.i(TAG,"Debug status & send_sms priority values = "+val + "  " +send_sms_val);
     }
+
+    //getters
     public static boolean getServiceStatus(Context cntxt){
         boolean debug = false;
         try {
@@ -118,6 +128,17 @@ public class SettingsActivity extends AppCompatActivity {
         }
         return msg;
     }
+    public static String getRingtone_URI(Context cntxt){
+        if(ringtone_URI!=null)
+        return ringtone_URI;
+        else{
+            String key  = cntxt.getString(R.string.ringtonePref_key);
+            SharedPreferences pref = cntxt.getSharedPreferences(
+                   key , Context.MODE_PRIVATE);
+            return pref.getString(key,null);
+        }
+    }
+    //
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -197,8 +218,12 @@ public class SettingsActivity extends AppCompatActivity {
     public static class SettingsFragment extends PreferenceFragmentCompat {
 
         Context svc_sw_cntxt;
-        Intent svc_intent;
+        Intent svc_intent, ringtone_select_intent;
         SwitchPreference svc_sw_pref;
+        ActivityResultLauncher<Intent> ringtoneSelectActivityLauncher;
+
+
+
 
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
@@ -270,10 +295,32 @@ public class SettingsActivity extends AppCompatActivity {
                 sign_editor.putString(getString(R.string.signature_key), Parser.getCurrentMsgSign());
                 return true;
             });
+            Preference alertPref = findPreference(getString(R.string.ringtonePref_key));
+            assert alertPref != null;
+            Context alertPref_cntxt = alertPref.getContext();
+            ringtoneSelectActivityLauncher = registerForActivityResult(
+                    new ActivityResultContracts.StartActivityForResult(),
+                    result -> {
+                        if (result.getResultCode() == Activity.RESULT_OK) {
+                            // There are no request codes
+                            Intent data = result.getData();
+                            assert data != null;
+                            Uri uri = data
+                                    .getParcelableExtra(RingtoneManager
+                                            .EXTRA_RINGTONE_PICKED_URI);
+                            if (uri != null) {
+                                ringtone_URI = uri.toString();
+                                SharedPreferences ringtone_sp = alertPref.getSharedPreferences();
+                                assert ringtone_sp != null;
+                                ringtone_sp.edit().putString(ringtone_URI,null).apply();
+                                alertPref.setSummary(RingtoneManager
+                                        .getRingtone(alertPref_cntxt, uri).getTitle(alertPref_cntxt));
+                        }
+                    }
+                    });
+                }
 
-        }
-
-        @Override
+            @Override
         public void onStart() {
             if(!getServiceStatus(svc_sw_cntxt))
             svc_sw_pref.setChecked(false);
@@ -293,6 +340,14 @@ public class SettingsActivity extends AppCompatActivity {
                ClipData clip = ClipData.newPlainText("Celestrak Results Copied from " +
                        TAG, result2bPopulated);
                clipboard.setPrimaryClip(clip);
+           }
+           else if(preference.getKey().equals(getString(R.string.ringtonePref_key))){
+               Intent intent = new Intent(RingtoneManager.ACTION_RINGTONE_PICKER);
+               intent.putExtra(RingtoneManager.EXTRA_RINGTONE_TITLE, "Select ringtone for alerts:");
+               intent.putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, false);
+               intent.putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true);
+               intent.putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE,RingtoneManager.TYPE_RINGTONE);
+               ringtoneSelectActivityLauncher.launch(intent);
            }
             return super.onPreferenceTreeClick(preference);
         }

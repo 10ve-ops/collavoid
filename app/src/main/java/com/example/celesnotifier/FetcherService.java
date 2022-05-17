@@ -10,6 +10,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
@@ -56,7 +59,8 @@ public class FetcherService extends Service {
     private static final long delay_bf_first_exec = 0;
     private static final int delay_bw_queries_inMinutes = 40, mNotifChannel_ID = 43;
     private Notification.Builder mBuilder;
-
+    private Ringtone alertTone, user_ringtone;
+    private Uri userRingtoneUri;
 
 
 
@@ -164,7 +168,25 @@ public class FetcherService extends Service {
         getSystemService(NotificationManager.class).notify(mNotifChannel_ID,
                 mBuilder.build());
     }
-
+    private void playRingtone(){
+        userRingtoneUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
+        //user_ringtone = RingtoneManager.getRingtone(This, userRingtoneUri);
+        String ringtoneUri = SettingsActivity.getRingtone_URI(this);
+        RingtoneManager.setActualDefaultRingtoneUri(
+                This,
+                RingtoneManager.TYPE_RINGTONE,
+                Uri.parse(ringtoneUri));
+        Uri alarm = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
+        alertTone = RingtoneManager.getRingtone(This, alarm);
+        alertTone.play();
+    }
+    private void stopRinging(){
+        alertTone.stop();
+        RingtoneManager.setActualDefaultRingtoneUri(
+                This,
+                RingtoneManager.TYPE_RINGTONE,
+                userRingtoneUri);
+    }
 
 
     @Override
@@ -189,10 +211,12 @@ public class FetcherService extends Service {
                 parser.init();
                 boolean debug_mode = getDebugPrefVal(),
                                     valid_warning = parser.warning != Parser.NO_WARN;
-                            String smsPrefVal = getsmsPriorityPrefVal();
-                            sms_send_Enabled = !smsPrefVal.equals(getString(R.string.dont_send_key));
-                            if(sms_send_Enabled){
-                            if (valid_warning || debug_mode)
+               //if(valid_warning)
+                    playRingtone();
+                String smsPrefVal = getsmsPriorityPrefVal();
+                sms_send_Enabled = !smsPrefVal.equals(getString(R.string.dont_send_key));
+                if(sms_send_Enabled){
+                    if (valid_warning || debug_mode)
                             {
                                 send_sms2all = smsPrefVal.
                                         equals(getString(R.string.send_all_key));
@@ -206,6 +230,7 @@ public class FetcherService extends Service {
                             /*else display notif or ring an alarm with alarm stop button*/
 
                 updteNotifTime();
+
             }
         }, delay_bf_first_exec,TimeUnit.MINUTES.toMillis(delay_bw_queries_inMinutes));
 
@@ -235,6 +260,7 @@ public class FetcherService extends Service {
             Log.e(TAG,"ERROR! couldn't cancel main timer task..");
         Log.e(TAG, "Service-OnDestroy()");
         setServiceStatus(false);
+        stopRinging();
         super.onDestroy();
     }
 

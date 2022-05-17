@@ -38,6 +38,15 @@
             app:summaryOn="@string/sms_notification_summary_on"
             app:title="@string/sms_notification_title" />
 
+    </PreferenceCategory >
+
+    <PreferenceCategory app:title="Alert Type">
+        <Preference
+            app:key="@string/ringtonePref_key"
+            app:selectable="true"
+            app:persistent="true"
+            app:title="@string/selectRingtone_title"
+            app:useSimpleSummaryProvider="true"/>
     </PreferenceCategory>
 
     <PreferenceCategory app:title="Miscellaneous">

@@ -52,4 +52,9 @@
     <string name="logFileSize_key">pref_logFileSize_field_key</string>
     <string name="logFileSize_title">Log File Size</string>
 
+
+    <!-- Alert Preferences -->
+    <string name="selectRingtone_title">Select Alert Ringtone</string>
+    <string name="ringtonePref_key">ringtone preference key</string>
+
 </resources>
