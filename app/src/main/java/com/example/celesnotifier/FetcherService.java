@@ -54,7 +54,7 @@ public class FetcherService extends Service {
     public Context This;
     private TimerTask timerTask, flushLog_timerTask;
     private static Date date;
-    private static boolean timeHasChanged = false;
+    private static boolean timeHasChanged = false, sms_send_Enabled;
     public static final long logIntervals_inHours = 3;
     private final static float maxAllowedLogFileSize = 1024f; //1GB
     private static boolean send_sms2all = false;
@@ -111,7 +111,7 @@ public class FetcherService extends Service {
         editor.putFloat(context.getString(R.string.logFileSize_key), size);
         editor.apply();
     }
-    public static void setLatRes(String msg, Context context){
+    public static void saveResults(String msg, Context context){
         SharedPreferences my_pref = context.getSharedPreferences(context.
                         getString(R.string.latest_result_key)
                 , MODE_PRIVATE);
@@ -191,7 +191,12 @@ public class FetcherService extends Service {
             else return null;
         }
     }
-
+    private static void update_lastupdate(Context context){
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
+        SharedPreferences.Editor editor = pref.edit();
+        editor.putLong(context.getString(R.string.lastUpdated_time), date.getTime());
+        editor.apply();
+    }
     private static boolean check4Change(Date thisDate, Context This){
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(This);
         Date prev_date = new Date(pref.getLong(This.getString(R.string.lastUpdated_time), 0));
@@ -217,9 +222,6 @@ public class FetcherService extends Service {
         Notification notification = mBuilder.build();
 
         startForeground(mNotifChannel_ID, notification);
-
-        //do heavy work on a background thread
-        //stopSelf();
         results = new HashMap<>();
         new Timer().schedule(timerTask = new TimerTask() {
             @Override
@@ -229,12 +231,11 @@ public class FetcherService extends Service {
                 Please Note: timerTask runnable is very unpredictable, it stops if certain types
                 of operations are performed with-in this block; like reading/writing to a file!
                  */
-                Log.d(TAG,"Running in the Thread " +Thread.currentThread().getId());
                 Document doc = jsoupConnector();
                 if (doc != null) {
                     Elements links = doc.select("tr:not(.shade)");
                     links = links.select("tr:not(.header)");
-                    Log.i(TAG, "Parsed html length = " + (links.indexOf(links.last()) + 1));
+                    //Log.i(TAG, "Parsed html length = " + (links.indexOf(links.last()) + 1));
                     /*
                     for (Element link : links) { //get print of all data
                         Log.i(TAG, "Parsed html:" + link.text());
@@ -301,12 +302,12 @@ public class FetcherService extends Service {
                             .replace("(obj1)", String.valueOf(results.get(getString(R.string.obj2_name))));
 
                             Log.e(TAG, msg);
-                            setLatRes(msg, This);
+                            saveResults(msg, This);
                             boolean debug_mode = getDebugPrefVal(),
                                     valid_warning = !warn_type.equals("No");
                             String smsPrefVal = getsmsPriorityPrefVal();
-
-                            if(!smsPrefVal.equals(getString(R.string.dont_send_key))){
+                            sms_send_Enabled = !smsPrefVal.equals(getString(R.string.dont_send_key));
+                            if(sms_send_Enabled){
                             if (valid_warning || debug_mode)
                             {
                                 send_sms2all = smsPrefVal.
@@ -318,7 +319,9 @@ public class FetcherService extends Service {
                                         && send_sms2all));
                                 sms_thread.start();
                             }}
-                        Log.i(TAG,"Printing all mapping entires.....");
+                            else{
+                                update_lastupdate(This);
+                            }
                         for (Map.Entry<String, ? super Object> me :
                                 results.entrySet()) {
                             System.out.print(me.getKey() + ":");
@@ -363,9 +366,6 @@ public class FetcherService extends Service {
         //IntentFilter filter = new IntentFilter("com.example.celesnotifier.Query");
         //this.registerReceiver(br, filter);
         //sendBroadcast("true");
-        Log.e(TAG, "OnStartCommand()");
-        Log.i(TAG,"Yellow & Red Warning prob threshold: "+yello_warn_thresh+" "+red_warn_thresh);
-        Log.i(TAG,"Yellow & Red Warning range threshold: "+yellow_min_range+" "+red_min_range);
         This = this.getApplicationContext();
         setServiceStatus(true);
         format_4DISP = new SimpleDateFormat(This.getString(R.string.dateNTimeSMS_Format), Locale.US);
@@ -410,6 +410,8 @@ public class FetcherService extends Service {
     }
 */
 
+
+
     public  class SendSMS_Thread implements Runnable {
         boolean send_to_all;
        final ArrayList<String> all_numbrs = new ArrayList<>();
@@ -433,10 +435,7 @@ public class FetcherService extends Service {
                 Log.e(TAG, "Sending sms...");
             }
             //edit changes after sms is sent so as to avoid storing times when sms fault occurred
-            SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(This);
-            SharedPreferences.Editor editor = pref.edit();
-            editor.putLong(This.getString(R.string.lastUpdated_time), date.getTime());
-            editor.apply();
+            FetcherService.update_lastupdate(This);
         }
 
 

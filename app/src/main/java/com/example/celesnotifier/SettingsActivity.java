@@ -6,6 +6,8 @@ import static com.example.celesnotifier.R.string.sms_notif_key;
 
 import android.Manifest;
 import android.app.Application;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -284,7 +286,17 @@ public class SettingsActivity extends AppCompatActivity {
 
         @Override
         public boolean onPreferenceTreeClick(Preference preference) {
+
            Log.e(TAG," Selected Preference from Tree  >> "+ preference.getKey());
+           if(preference.getKey().equals(getString(R.string.latest_result_key))){
+               String result2bPopulated = getLatRes(preference.getContext());
+               preference.setSummary(result2bPopulated);
+               ClipboardManager clipboard = (ClipboardManager) preference
+                       .getContext().getSystemService(CLIPBOARD_SERVICE);
+               ClipData clip = ClipData.newPlainText("Celestrak Results Copied from " +
+                       TAG, result2bPopulated);
+               clipboard.setPrimaryClip(clip);
+           }
             return super.onPreferenceTreeClick(preference);
         }
 
