@@ -168,16 +168,32 @@ public class FetcherService extends Service {
         getSystemService(NotificationManager.class).notify(mNotifChannel_ID,
                 mBuilder.build());
     }
-    private void playRingtone(){
+    public static String getRingtone_URI(Context cntxt) throws PackageManager.NameNotFoundException {
+        Context con = cntxt.createPackageContext("com.example.celesnotifier", 0);
+            String key  = cntxt.getString(R.string.ringtonePref_key);
+            String result = con.getSharedPreferences(
+                    key , Context.MODE_PRIVATE).getString(key,null);
+            Log.e(TAG,"Got ringtone uri as: "+result);
+            if(result!=null)
+                return result;
+            else{
+                //get default ringtone
+                String def= RingtoneManager.getValidRingtoneUri(cntxt).toString();
+                SettingsActivity.setRingtonePref(cntxt, def);
+                return def;
+        }
+    }
+    private void playRingtone() throws PackageManager.NameNotFoundException {
         userRingtoneUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
+
         //user_ringtone = RingtoneManager.getRingtone(This, userRingtoneUri);
-        String ringtoneUri = SettingsActivity.getRingtone_URI(this);
+        String ringtoneUri = getRingtone_URI(this.getApplicationContext());
         RingtoneManager.setActualDefaultRingtoneUri(
                 This,
                 RingtoneManager.TYPE_RINGTONE,
-                Uri.parse(ringtoneUri));
+                ringtoneUri!=null?Uri.parse(ringtoneUri):userRingtoneUri);
         Uri alarm = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
-        alertTone = RingtoneManager.getRingtone(This, alarm);
+        alertTone = RingtoneManager.getRingtone(This.getApplicationContext(), alarm);
         alertTone.play();
     }
     private void stopRinging(){
@@ -211,8 +227,12 @@ public class FetcherService extends Service {
                 parser.init();
                 boolean debug_mode = getDebugPrefVal(),
                                     valid_warning = parser.warning != Parser.NO_WARN;
-               //if(valid_warning)
+               if(valid_warning)
+                try {
                     playRingtone();
+                } catch (PackageManager.NameNotFoundException e) {
+                    e.printStackTrace();
+                }
                 String smsPrefVal = getsmsPriorityPrefVal();
                 sms_send_Enabled = !smsPrefVal.equals(getString(R.string.dont_send_key));
                 if(sms_send_Enabled){

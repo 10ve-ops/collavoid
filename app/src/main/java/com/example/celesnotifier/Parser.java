@@ -33,9 +33,7 @@ public class Parser {
     private String timeElement;
     private Date date;
     private Context This;
-    private static boolean x;
     private boolean timeHasChanged;
-    private static float z;
     public static final int NO_WARN = 0, RED_WARN = 1, YELLOW_WARN = 2;
     public int warning,
             connection_out_times = 1;
