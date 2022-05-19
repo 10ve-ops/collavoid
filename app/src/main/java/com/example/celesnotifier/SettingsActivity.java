@@ -20,8 +20,6 @@ import android.os.PersistableBundle;
 import android.util.Log;
 import android.view.MenuItem;
 
-import androidx.activity.result.ActivityResult;
-import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
@@ -39,7 +37,6 @@ import java.text.DecimalFormat;
 public class SettingsActivity extends AppCompatActivity {
     public static String TAG = "CelesNotifier";
     Context This;
-    private static String ringtone_URI;
     //private static boolean sms_notif_status;
     /* //for future use
     public static boolean service_status = false;
@@ -129,14 +126,28 @@ public class SettingsActivity extends AppCompatActivity {
         }
         return msg;
     }
-    static void setRingtonePref(Context cntxt, String ringtone_URI){
-            SharedPreferences ringtone_sp =
-                    cntxt.getSharedPreferences
-                            (cntxt.getString(R.string.ringtonePref_key),
-                                    Context.MODE_PRIVATE);
-            ringtone_sp.edit().putString(ringtone_URI, null).apply();
-            Log.e(TAG,"setting ringtone uri to: "+ringtone_URI);
+    public static String getCurrentRngtone(Context context) throws PackageManager.NameNotFoundException {
+        //Context con = createPackageContext("com.example.celesnotifier", 0);
+        String key  = context.getString(R.string.ringtonePref_key);
+        String result = context.getSharedPreferences(
+                context.getPackageName() , Context.MODE_PRIVATE).getString(key,null);
+        Log.e(TAG,"Got ringtone uri as: "+result);
+        if(result!=null)
+            return result;
+        else{
+            //get default ringtone
+            return RingtoneManager.getValidRingtoneUri(context).toString();
+        }
     }
+    public static void setRingtonePref(Context context, String ringtone_URI){
+        SharedPreferences ringtone_sp =
+                context.getSharedPreferences
+                        (context.getPackageName(),
+                                Context.MODE_PRIVATE);
+        ringtone_sp.edit().putString(context.getString(R.string.ringtonePref_key), ringtone_URI).apply();
+        Log.e(TAG,"setting ringtone uri to: "+ringtone_URI + "from SettingsActivity");
+    }
+
 
     //
 
@@ -302,10 +313,11 @@ public class SettingsActivity extends AppCompatActivity {
             try {
                 ringtone = RingtoneManager
                         .getRingtone(alertPref_cntxt, Uri.parse(
-                                FetcherService.getRingtone_URI(alertPref_cntxt)));
+                                getCurrentRngtone(alertPref_cntxt)));
             } catch (PackageManager.NameNotFoundException e) {
                 e.printStackTrace();
             }
+            if(ringtone!=null)
             alertPref.setSummary(ringtone.getTitle(alertPref_cntxt));
             ringtoneSelectActivityLauncher = registerForActivityResult(
                     new ActivityResultContracts.StartActivityForResult(),
@@ -313,20 +325,20 @@ public class SettingsActivity extends AppCompatActivity {
                         if (result.getResultCode() == Activity.RESULT_OK) {
                             // There are no request codes
                             Intent data = result.getData();
-                            assert data != null;
-                            Uri uri = data
-                                    .getParcelableExtra(RingtoneManager
-                                            .EXTRA_RINGTONE_PICKED_URI);
+                            Uri uri = null;
+                            if(data != null)
+                                uri = data
+                                        .getParcelableExtra(RingtoneManager
+                                                .EXTRA_RINGTONE_PICKED_URI);
                             if (uri != null) {
-                                ringtone_URI = uri.toString();
-                                setRingtonePref(alertPref_cntxt,ringtone_URI);
+                                setRingtonePref(alertPref_cntxt,uri.toString());
                                 Ringtone ringtonex = RingtoneManager
                                         .getRingtone(alertPref_cntxt, uri);
                                 alertPref.setSummary(ringtonex.getTitle(alertPref_cntxt));
                                 Log.i(TAG,"Ringtone title: "+ringtonex
                                         .getTitle(alertPref_cntxt));
+                            }
                         }
-                    }
                     });
                 }
 

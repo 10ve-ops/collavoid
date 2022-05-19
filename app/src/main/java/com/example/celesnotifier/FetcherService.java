@@ -13,37 +13,21 @@ import android.content.pm.PackageManager;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
-import android.os.Handler;
 import android.os.IBinder;
-import android.os.Looper;
 import android.telephony.SmsManager;
 import android.util.Log;
-import android.widget.Toast;
 
 import androidx.annotation.Nullable;
-import androidx.core.app.NotificationCompat;
-import androidx.preference.PreferenceManager;
-
-import org.jsoup.Connection;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
-import java.util.TimeZone;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
@@ -59,7 +43,7 @@ public class FetcherService extends Service {
     private static final long delay_bf_first_exec = 0;
     private static final int delay_bw_queries_inMinutes = 40, mNotifChannel_ID = 43;
     private Notification.Builder mBuilder;
-    private Ringtone alertTone, user_ringtone;
+    private Ringtone alertTone;
     private Uri userRingtoneUri;
 
 
@@ -168,18 +152,25 @@ public class FetcherService extends Service {
         getSystemService(NotificationManager.class).notify(mNotifChannel_ID,
                 mBuilder.build());
     }
-    public static String getRingtone_URI(Context cntxt) throws PackageManager.NameNotFoundException {
-        Context con = cntxt.createPackageContext("com.example.celesnotifier", 0);
-            String key  = cntxt.getString(R.string.ringtonePref_key);
-            String result = con.getSharedPreferences(
-                    key , Context.MODE_PRIVATE).getString(key,null);
-            Log.e(TAG,"Got ringtone uri as: "+result);
+    void setRingtonePref(String ringtone_URI){
+        SharedPreferences ringtone_sp =
+                getSharedPreferences
+                        (this.getPackageName(),
+                                Context.MODE_PRIVATE);
+        ringtone_sp.edit().putString(getString(R.string.ringtonePref_key), ringtone_URI).apply();
+        Log.e(TAG,"setting ringtone uri to: "+ringtone_URI+" from service");
+    }
+    public  String getRingtone_URI() throws PackageManager.NameNotFoundException {
+            String key  = getString(R.string.ringtonePref_key);
+            String result = getSharedPreferences(
+                    this.getPackageName() , Context.MODE_PRIVATE).getString(key,null);
+            Log.e(TAG,"Got ringtone uri as: "+result+ " from service");
             if(result!=null)
                 return result;
             else{
                 //get default ringtone
-                String def= RingtoneManager.getValidRingtoneUri(cntxt).toString();
-                SettingsActivity.setRingtonePref(cntxt, def);
+                String def= RingtoneManager.getValidRingtoneUri(this.getApplicationContext()).toString();
+                setRingtonePref(def);
                 return def;
         }
     }
@@ -187,7 +178,7 @@ public class FetcherService extends Service {
         userRingtoneUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
 
         //user_ringtone = RingtoneManager.getRingtone(This, userRingtoneUri);
-        String ringtoneUri = getRingtone_URI(this.getApplicationContext());
+        String ringtoneUri = getRingtone_URI();
         RingtoneManager.setActualDefaultRingtoneUri(
                 This,
                 RingtoneManager.TYPE_RINGTONE,
@@ -197,6 +188,7 @@ public class FetcherService extends Service {
         alertTone.play();
     }
     private void stopRinging(){
+        if(alertTone!=null)
         alertTone.stop();
         RingtoneManager.setActualDefaultRingtoneUri(
                 This,
@@ -227,12 +219,14 @@ public class FetcherService extends Service {
                 parser.init();
                 boolean debug_mode = getDebugPrefVal(),
                                     valid_warning = parser.warning != Parser.NO_WARN;
-               if(valid_warning)
-                try {
-                    playRingtone();
-                } catch (PackageManager.NameNotFoundException e) {
-                    e.printStackTrace();
-                }
+               if(valid_warning) {
+                   Log.e(TAG, "valid warning is executing");
+                   try {
+                       playRingtone();
+                   } catch (PackageManager.NameNotFoundException e) {
+                       e.printStackTrace();
+                   }
+               }
                 String smsPrefVal = getsmsPriorityPrefVal();
                 sms_send_Enabled = !smsPrefVal.equals(getString(R.string.dont_send_key));
                 if(sms_send_Enabled){

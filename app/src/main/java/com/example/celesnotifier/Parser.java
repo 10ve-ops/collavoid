@@ -116,6 +116,7 @@ public class Parser {
     }
     private void composeNsaveResults(){
         String warn_type = "No";
+        this.warning = NO_WARN;
         //noinspection ConstantConditions
         if ((Float) results.get(This.getString(R.string.min_range)) <=
                 red_min_range && (Float) results.get(This.getResources().getString(R.string.max_prob)) >= red_warn_thresh){
