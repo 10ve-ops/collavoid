@@ -6,8 +6,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.preference.PreferenceManager;
 
 import org.jsoup.Connection;
@@ -29,7 +27,9 @@ import java.util.TimeZone;
 
 public class Parser {
     private static Map<String, ? super Object > results;
-    private static final String TAG = "CelesNotifier_Parser";
+    private static String URL =  "https://celestrak.com/SOCRATES/search-results.php?IDENT" +
+            "=NAME&NAME_TEXT1=PRSS&NAME_TEXT2=&CATNR_TEXT1=&CATNR_TEXT2" +
+            "=&ORDER=MAXPROB&MAX=25&B1=Submit", TAG = "CelesNotifier_Parser";
     private String timeElement;
     private Date date;
     private Context This;
@@ -145,12 +145,8 @@ public class Parser {
             System.out.println(me.getValue());
         }
     }
-    @Nullable
-    private Document jsoupConnector(){
+    private Document jsoupConnector() {
         try {
-            String URL = "https://celestrak.com/SOCRATES/search-results.php?IDENT" +
-                    "=NAME&NAME_TEXT1=PRSS&NAME_TEXT2=&CATNR_TEXT1=&CATNR_TEXT2" +
-                    "=&ORDER=MAXPROB&MAX=25&B1=Submit";
             Connection connection =  Jsoup.connect(URL);
             return connection.get();
         } catch (IOException e) {
@@ -168,7 +164,7 @@ public class Parser {
         Log.e(TAG,"This query time: "+ format_4DISP.format(thisDate));
         return thisDate.after(prev_date);
     }
-    public static void saveResults(String msg, @NonNull Context context){
+    public static void saveResults(String msg, Context context){
         SharedPreferences my_pref = context.getSharedPreferences(context.
                         getString(R.string.latest_result_key)
                 , MODE_PRIVATE);
@@ -185,6 +181,12 @@ public class Parser {
 
 
     //getters
+    public Date getQueryTime(){
+        return date;
+    }
+    public String getTimeElement(){
+        return timeElement;
+    }
     public static String getCurrentMsgSign(){
         return msg;
     }
