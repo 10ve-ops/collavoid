@@ -160,7 +160,7 @@ public class FetcherService extends Service {
         ringtone_sp.edit().putString(getString(R.string.ringtonePref_key), ringtone_URI).apply();
         Log.e(TAG,"setting ringtone uri to: "+ringtone_URI+" from service");
     }
-    public  String getRingtone_URI() throws PackageManager.NameNotFoundException {
+    public  String getRingtone_URI() {
             String key  = getString(R.string.ringtonePref_key);
             String result = getSharedPreferences(
                     this.getPackageName() , Context.MODE_PRIVATE).getString(key,null);
@@ -202,7 +202,8 @@ public class FetcherService extends Service {
 
         Intent notificationIntent = new Intent(this, SettingsActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this,
-                0, notificationIntent, 0);
+                0, notificationIntent, PendingIntent.FLAG_IMMUTABLE |
+                        PendingIntent.FLAG_UPDATE_CURRENT);
 
         mBuilder = new Notification.Builder(this, CHANNEL_ID)
                 .setContentTitle("CelesNotifier")
