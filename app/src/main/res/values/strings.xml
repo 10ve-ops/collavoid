@@ -23,12 +23,9 @@
     <string name="service_header">Service</string>
     <string name="service_status_key">serviceStatus</string>
     <string name="sms_notif_key">sms_notif</string>
-    <string name="svc_status_prefFileName">kkasdugdjfvniuxasyfdsyfsdhfsncvisucicuad
-        bairsdfbxc</string>
-    <string name="svc_status_prefName">kkasdugdjfvniuxasyfdsy
-        sdfsdfshdbvbsdv1651sd16sd3s16sd33fsdhfsncvisucicuadbairsdfbxc</string>
-    <string name="debug_status_prefFileName">kkasdugdjfvniuxa234234234234234syfdsyfsdhfsncvisucicuad
-        bairsdfbxc</string>
+    <string name="svc_status_prefFileName">svc status pref_k</string>
+    <string name="svc_status_prefName">svc status pref_name</string>
+    <string name="debug_status_prefFileName">debugstatuspref</string>
     <string name="debug_status_prefName">kkasdugdjfvniuxadfgdfgdfhgfnff23423syfdsy
         sdfsdfshdbvbsdv1651sd16sd3s16sd33fsdhfsncvisucicuadbairsdfbxc</string>
     <string name="service_status">Service Status</string>
@@ -37,7 +34,7 @@
     </string>
     <string name="sms_notification_summary_off">Only warnings wll be notified</string>
     <string name="lastUpdated_time">last_update_time</string>
-    <string name="send_sharedPref_key">jkznxckznx545</string>
+    <string name="send_sharedPref_key">send_key</string>
     <string name="dateNTimePSRSE_Format">yyyy MMM dd HH:mm</string>
     <string name="timeDisp_Format">MMM dd hh:mm aa</string>
     <string name="dateNTimeSMS_Format">EEE MMM dd yyyy HH:mm z</string>

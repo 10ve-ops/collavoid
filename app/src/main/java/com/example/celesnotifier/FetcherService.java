@@ -1,7 +1,6 @@
 package com.example.celesnotifier;
 
 import static com.example.celesnotifier.App.CHANNEL_ID;
-
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -33,77 +32,85 @@ import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
 public class FetcherService extends Service {
-    public static String TAG = "Fetcher Service";
+    private static final String TAG = "Fetcher Service";
     public Context This;
-    private TimerTask timerTask, flushLog_timerTask;
-    private static boolean sms_send_Enabled;
-    public static final long logIntervals_inHours = 3;
-    private final static float maxAllowedLogFileSize = 1024f; //1GB
-    private static boolean send_sms2all = false;
-    private static final long delay_bf_first_exec = 0;
-    private static final int delay_bw_queries_inMinutes = 40, mNotifChannel_ID = 43;
+    private TimerTask mtimerTask, mflushLog_timerTask;
+    private static boolean sSms_send_Enabled;
+    private static final long LONG_INTERVALS_IN_HRS = 3, DELAY_BF_FRST_EXEC = 0;
+    private final static float MAX_ALLOWED_LOG_FILE_SIZE = 1024f; //1GB
+    private static boolean sSend_sms2all = false;
+    private static final int DELAY_BW_QUERIES_MINS = 40, NOTIF_CHANNEL_ID = 43;
     private Notification.Builder mBuilder;
-    private Ringtone alertTone;
-    private Uri userRingtoneUri;
+    private Ringtone mAlertTone;
+    private Uri mUserRingtoneUri;
 
 
 
     public String getsmsPriorityPrefVal(){
         String priority = null;
-        try {
-            Context con = createPackageContext("com.example.celesnotifier", 0);
-            SharedPreferences pref = con.getSharedPreferences(
-                    getString(R.string.debug_status_prefFileName), Context.MODE_PRIVATE);
-            priority = pref.getString(getString(R.string.send_sharedPref_key), null);
-
-        } catch (PackageManager.NameNotFoundException e) {
-            Log.e("Not data shared", e.toString());
-        }
-        return priority;
+        SharedPreferences pref = this.getSharedPreferences(
+                getString(R.string.debug_status_prefFileName), Context.MODE_PRIVATE);
+        return pref.getString(getString(R.string.send_sharedPref_key),
+                getString(R.string.dont_send_key));
     }
     public boolean getDebugPrefVal(){
-        boolean debug = false;
-        try {
-            Context con = createPackageContext("com.example.celesnotifier", 0);
-            SharedPreferences pref = con.getSharedPreferences(
-                    getString(R.string.debug_status_prefFileName), Context.MODE_PRIVATE);
-            debug = pref.getBoolean(getString(R.string.debug_status_prefName), false);
-        } catch (PackageManager.NameNotFoundException e) {
-            Log.e("Not data shared", e.toString());
+        SharedPreferences pref = this.getSharedPreferences(
+                getString(R.string.debug_status_prefFileName), Context.MODE_PRIVATE);
+        return pref.getBoolean(getString(R.string.debug_status_prefName), true);
+    }
+    public  String getRingtone_URI() {
+        String key  = getString(R.string.ringtonePref_key);
+        String result = getSharedPreferences(
+                this.getPackageName() , Context.MODE_PRIVATE).getString(key,null);
+        Log.e(TAG,"Got ringtone uri as: "+result+ " from service");
+        if(result!=null)
+            return result;
+        else{
+            //get default ringtone
+            String def= RingtoneManager.getValidRingtoneUri(this.getApplicationContext()).toString();
+            setRingtonePref(def);
+            return def;
         }
-        return debug;
     }
     public void setServiceStatus(boolean serviceStatus){
-        SharedPreferences my_pref = getSharedPreferences(getString(R.string.svc_status_prefFileName)
-                , MODE_PRIVATE);
-        SharedPreferences.Editor editor = my_pref.edit();
-        editor.putBoolean(getString(R.string.svc_status_prefName), serviceStatus);
-        editor.apply();
+        getSharedPreferences(getString(R.string.svc_status_prefFileName)
+                , MODE_PRIVATE)
+                .edit()
+                .putBoolean(getString(R.string.svc_status_prefName), serviceStatus)
+                .apply();
     }
     public static void setLogFileSize(float size, Context context){
-        SharedPreferences my_pref = context.getSharedPreferences(context.
+        context.getSharedPreferences(context.
                 getString(R.string.svc_status_prefFileName)
-                , MODE_PRIVATE);
-        SharedPreferences.Editor editor = my_pref.edit();
-        editor.putFloat(context.getString(R.string.logFileSize_key), size);
-        editor.apply();
+                , MODE_PRIVATE)
+                .edit()
+                .putFloat(context.getString(R.string.logFileSize_key), size)
+                .apply();
+    }
+    void setRingtonePref(String ringtone_URI){
+        getSharedPreferences(this.getPackageName(),Context.MODE_PRIVATE)
+                .edit()
+                .putString(getString(R.string.ringtonePref_key), ringtone_URI)
+                .apply();
+        Log.v(TAG,"setting ringtone uri to: "+ringtone_URI+" from service");
     }
     public static void printLog(Context context){
         boolean delete_successfull = false;
-        String filename = context.getExternalFilesDir(null).getPath() + File.separator + "celesNotifier.log";
-        String command = "logcat -d *:V";
+        String filename = context.getExternalFilesDir(null).getPath()
+                + File.separator
+                + "celesNotifier.log";
+        String cmd = "logcat -d *:V";
 
-        Log.d(TAG, "command: " + command);
+        Log.d(TAG, "command: " + cmd);
 
         try{
-            Process process = Runtime.getRuntime().exec(command);
-
+            Process process = Runtime.getRuntime().exec(cmd);
             BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line;
                 File file = new File(filename);
                 float file_size = (file.length()/1024f)/1024f;
                 setLogFileSize(file_size, context);
-                boolean sizeExceeded = file_size>maxAllowedLogFileSize;
+                boolean sizeExceeded = file_size>MAX_ALLOWED_LOG_FILE_SIZE;
                 if(sizeExceeded){ //init force delete
                 if(file.delete())
                 Log.d(TAG,"File delete success in first attempt...");
@@ -141,59 +148,36 @@ public class FetcherService extends Service {
         }
         if(delete_successfull)
             Log.e(TAG,"Old log file size exceeded "
-                    +maxAllowedLogFileSize+"MBs, Hence deleted...");
+                    +MAX_ALLOWED_LOG_FILE_SIZE+" MBs, Hence deleted...");
     }
     private void updteNotifTime(){
         long time = Calendar.getInstance().getTimeInMillis()
-                + (delay_bw_queries_inMinutes * 60 * 1000);
+                + (DELAY_BW_QUERIES_MINS * 60 * 1000);
         mBuilder.setContentText("Next query at "+
                 new SimpleDateFormat(getString(R.string.timeDisp_Format),
                         Locale.getDefault()).format(time));
-        getSystemService(NotificationManager.class).notify(mNotifChannel_ID,
+        getSystemService(NotificationManager.class).notify(NOTIF_CHANNEL_ID,
                 mBuilder.build());
     }
-    void setRingtonePref(String ringtone_URI){
-        SharedPreferences ringtone_sp =
-                getSharedPreferences
-                        (this.getPackageName(),
-                                Context.MODE_PRIVATE);
-        ringtone_sp.edit().putString(getString(R.string.ringtonePref_key), ringtone_URI).apply();
-        Log.e(TAG,"setting ringtone uri to: "+ringtone_URI+" from service");
-    }
-    public  String getRingtone_URI() throws PackageManager.NameNotFoundException {
-            String key  = getString(R.string.ringtonePref_key);
-            String result = getSharedPreferences(
-                    this.getPackageName() , Context.MODE_PRIVATE).getString(key,null);
-            Log.e(TAG,"Got ringtone uri as: "+result+ " from service");
-            if(result!=null)
-                return result;
-            else{
-                //get default ringtone
-                String def= RingtoneManager.getValidRingtoneUri(this.getApplicationContext()).toString();
-                setRingtonePref(def);
-                return def;
-        }
-    }
     private void playRingtone() throws PackageManager.NameNotFoundException {
-        userRingtoneUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
-
-        //user_ringtone = RingtoneManager.getRingtone(This, userRingtoneUri);
+        mUserRingtoneUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
+        //user_ringtone = RingtoneManager.getRingtone(This, mUserRingtoneUri);
         String ringtoneUri = getRingtone_URI();
         RingtoneManager.setActualDefaultRingtoneUri(
-                This,
+                this,
                 RingtoneManager.TYPE_RINGTONE,
-                ringtoneUri!=null?Uri.parse(ringtoneUri):userRingtoneUri);
+                ringtoneUri!=null?Uri.parse(ringtoneUri):mUserRingtoneUri);
         Uri alarm = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
-        alertTone = RingtoneManager.getRingtone(This.getApplicationContext(), alarm);
-        alertTone.play();
+        mAlertTone = RingtoneManager.getRingtone(getApplicationContext(), alarm);
+        mAlertTone.play();
     }
     private void stopRinging(){
-        if(alertTone!=null)
-        alertTone.stop();
+        if(mAlertTone!=null)
+        mAlertTone.stop();
         RingtoneManager.setActualDefaultRingtoneUri(
-                This,
+                this,
                 RingtoneManager.TYPE_RINGTONE,
-                userRingtoneUri);
+                mUserRingtoneUri); //reset defaults
     }
 
 
@@ -202,23 +186,24 @@ public class FetcherService extends Service {
 
         Intent notificationIntent = new Intent(this, SettingsActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this,
-                0, notificationIntent, 0);
+                0, notificationIntent, PendingIntent.FLAG_IMMUTABLE
+                        +PendingIntent.FLAG_UPDATE_CURRENT);
 
         mBuilder = new Notification.Builder(this, CHANNEL_ID)
                 .setContentTitle("CelesNotifier")
-                .setContentText("Logging results in every "+ delay_bw_queries_inMinutes + " minutes")
+                .setContentText("Logging results in every "+ DELAY_BW_QUERIES_MINS + " minutes")
                 .setSmallIcon(R.mipmap.ic_launcher_foreground)
                 .setContentIntent(pendingIntent);
         Notification notification = mBuilder.build();
 
-        startForeground(mNotifChannel_ID, notification);
-        new Timer().schedule(timerTask = new TimerTask() {
+        startForeground(NOTIF_CHANNEL_ID, notification);
+        new Timer().schedule(mtimerTask = new TimerTask() {
             @Override
             public void run() {
                 Parser parser = new Parser(This);
                 parser.init();
                 boolean debug_mode = getDebugPrefVal(),
-                                    valid_warning = parser.warning != Parser.NO_WARN;
+                        valid_warning = parser.warning != Parser.NO_WARN;
                if(valid_warning) {
                    Log.e(TAG, "valid warning is executing");
                    try {
@@ -228,32 +213,31 @@ public class FetcherService extends Service {
                    }
                }
                 String smsPrefVal = getsmsPriorityPrefVal();
-                sms_send_Enabled = !smsPrefVal.equals(getString(R.string.dont_send_key));
-                if(sms_send_Enabled){
-                    if (valid_warning || debug_mode)
-                            {
-                                send_sms2all = smsPrefVal.
-                                        equals(getString(R.string.send_all_key));
-                                Log.e(TAG,"Send SMS action value retrieved as: "
-                                        + (send_sms2all? "send to all" : "send to me only"));
-                                Thread sms_thread;
-                                sms_thread = new Thread(new SendSMS_Thread(valid_warning
-                                        && send_sms2all));
-                                sms_thread.start();
-                            }}
-                            /*else display notif or ring an alarm with alarm stop button*/
-
+                sSms_send_Enabled = !smsPrefVal.equals(getString(R.string.dont_send_key));
+                if(sSms_send_Enabled){
+                    if (valid_warning && !debug_mode)
+                    {
+                        sSend_sms2all = smsPrefVal.
+                                equals(getString(R.string.send_all_key));
+                        Log.e(TAG,"Send SMS action value retrieved as: "
+                                       + (sSend_sms2all? "send to all" : "send to me only"));
+                        Thread sms_thread;
+                        sms_thread = new Thread(new SendSMS_Thread(valid_warning
+                                && sSend_sms2all));
+                        sms_thread.start();
+                    }
+                }
                 updteNotifTime();
 
             }
-        }, delay_bf_first_exec,TimeUnit.MINUTES.toMillis(delay_bw_queries_inMinutes));
+        }, DELAY_BF_FRST_EXEC,TimeUnit.MINUTES.toMillis(DELAY_BW_QUERIES_MINS));
 
-        new Timer().schedule(flushLog_timerTask = new TimerTask() {
+        new Timer().schedule(mflushLog_timerTask = new TimerTask() {
             @Override
             public void run() {
                 printLog(This);
             }
-        }, delay_bf_first_exec,TimeUnit.HOURS.toMillis(logIntervals_inHours));
+        }, DELAY_BF_FRST_EXEC,TimeUnit.HOURS.toMillis(LONG_INTERVALS_IN_HRS));
 
         return START_STICKY;
     }
@@ -268,9 +252,9 @@ public class FetcherService extends Service {
 
     @Override
     public void onDestroy() {
-        if(!flushLog_timerTask.cancel())
+        if(!mflushLog_timerTask.cancel())
             Log.e(TAG,"ERROR! couldn't cancel flush_Log timer task..");
-        if(!timerTask.cancel())
+        if(!mtimerTask.cancel())
             Log.e(TAG,"ERROR! couldn't cancel main timer task..");
         Log.e(TAG, "Service-OnDestroy()");
         setServiceStatus(false);

@@ -27,12 +27,10 @@ import java.util.TimeZone;
 
 public class Parser {
     private static Map<String, ? super Object > results;
-    private static String URL =  "https://celestrak.com/SOCRATES/search-results.php?IDENT" +
-            "=NAME&NAME_TEXT1=PRSS&NAME_TEXT2=&CATNR_TEXT1=&CATNR_TEXT2" +
-            "=&ORDER=MAXPROB&MAX=25&B1=Submit", TAG = "CelesNotifier_Parser";
+    private static final String TAG = "CelesNotifier_Parser";
     private String timeElement;
     private Date date;
-    private Context This;
+    private final Context This;
     private boolean timeHasChanged;
     public static final int NO_WARN = 0, RED_WARN = 1, YELLOW_WARN = 2;
     public int warning,
@@ -147,6 +145,9 @@ public class Parser {
     }
     private Document jsoupConnector() {
         try {
+            String URL = "https://celestrak.com/SOCRATES/search-results.php?IDENT" +
+                    "=NAME&NAME_TEXT1=PRSS&NAME_TEXT2=&CATNR_TEXT1=&CATNR_TEXT2" +
+                    "=&ORDER=MAXPROB&MAX=25&B1=Submit";
             Connection connection =  Jsoup.connect(URL);
             return connection.get();
         } catch (IOException e) {

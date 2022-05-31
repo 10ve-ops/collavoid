@@ -35,56 +35,7 @@ import androidx.preference.SwitchPreference;
 import java.text.DecimalFormat;
 
 public class SettingsActivity extends AppCompatActivity {
-    public static String TAG = "CelesNotifier";
-    Context This;
-    //private static boolean sms_notif_status;
-    /* //for future use
-    public static boolean service_status = false;
-    BroadcastReceiver br = new MyBroadcastReceiver();
-    public static class MyBroadcastReceiver extends BroadcastReceiver {
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if ("com.example.celesnotifier.FETCHER_SERVICE".equals(intent.getAction())) {
-                String receivedText = intent.getStringExtra("status");
-                if(receivedText!=null)
-                service_status = Boolean.parseBoolean(receivedText);
-            }
-        }
-    }
-
-    protected void sendQueryBroadcast(){
-        Intent intent1 = new Intent(); //query fetcher service for its active status
-        intent1.setAction("com.example.celesnotifier.Query");
-        intent1.putExtra("notification_switch", Boolean.toString(sms_notif_status));
-        intent1.setPackage("com.example.celesnotifier");
-        sendBroadcast(intent1);
-    }
-*/
-
-    /*
-    private boolean isMyServiceRunning(Class<?> serviceClass) {
-        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
-            if (serviceClass.getName().equals(service.service.getClassName())) {
-                return true;
-            }
-        }
-        return false;
-    }
-        */
-
-    public static void set_Debug_sendAction_pref(Context appContxt , Boolean val, String send_sms_val){
-        SharedPreferences my_pref = appContxt.getSharedPreferences(appContxt.getString(R.string.debug_status_prefFileName)
-            , MODE_PRIVATE);
-        SharedPreferences.Editor editor = my_pref.edit();
-        if(val!=null)
-        editor.putBoolean(appContxt.getString(R.string.debug_status_prefName), val);
-        else if(send_sms_val!=null)
-            editor.putString(appContxt.getString(R.string.send_sharedPref_key), send_sms_val);
-        editor.apply();
-        //Log.i(TAG,"Debug status & send_sms priority values = "+val + "  " +send_sms_val);
-    }
+    private static final String TAG = "CelesNotifier";
 
     //getters
     public static boolean getServiceStatus(Context cntxt){
@@ -139,6 +90,20 @@ public class SettingsActivity extends AppCompatActivity {
             return RingtoneManager.getValidRingtoneUri(context).toString();
         }
     }
+    //
+
+    //setters
+    public static void set_Debug_sendAction_pref(Context appContxt , Boolean val, String send_sms_val){
+        SharedPreferences my_pref = appContxt.getSharedPreferences(appContxt.getString(R.string.debug_status_prefFileName)
+                , MODE_PRIVATE);
+        SharedPreferences.Editor editor = my_pref.edit();
+        if(val!=null)
+            editor.putBoolean(appContxt.getString(R.string.debug_status_prefName), val);
+        else if(send_sms_val!=null)
+            editor.putString(appContxt.getString(R.string.send_sharedPref_key), send_sms_val);
+        editor.apply();
+        //Log.i(TAG,"Debug status & send_sms priority values = "+val + "  " +send_sms_val);
+    }
     public static void setRingtonePref(Context context, String ringtone_URI){
         SharedPreferences ringtone_sp =
                 context.getSharedPreferences
@@ -147,14 +112,10 @@ public class SettingsActivity extends AppCompatActivity {
         ringtone_sp.edit().putString(context.getString(R.string.ringtonePref_key), ringtone_URI).apply();
         Log.e(TAG,"setting ringtone uri to: "+ringtone_URI + "from SettingsActivity");
     }
-
-
     //
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-       // this.registerReceiver(br, new IntentFilter("com.example.celesnotifier.FETCHER_SERVICE"));
-        This = this;
         super.onCreate(savedInstanceState);
         setContentView(R.layout.settings_activity);
         if (savedInstanceState == null) {
@@ -163,134 +124,101 @@ public class SettingsActivity extends AppCompatActivity {
                     .replace(R.id.settings, new SettingsFragment())
                     .commit();
         }
-        //sendQueryBroadcast();
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
         if(checkSelfPermission(Manifest.permission.SEND_SMS) ==
                 PackageManager.PERMISSION_DENIED )
-            ActivityCompat.requestPermissions(SettingsActivity.this,
+            ActivityCompat.requestPermissions(this,
                     new String[] { Manifest.permission.SEND_SMS }, 0);
-        //sendQueryBroadcast();
     }
 
     @Override
     public void onBackPressed() {
-        //sendQueryBroadcast();
         super.onBackPressed();
     }
 
     @Override
     protected void onDestroy() {
-        Log.e(TAG,"onDestroy()");
-        /*
-        //this.unregisterReceiver(br);
-        Intent intent1 = new Intent(); //query fetcher service for its active status
-        intent1.setAction("com.example.celesnotifier.Query");
-        intent1.putExtra("dead", Boolean.toString(true));
-        intent1.setPackage("com.example.celesnotifier");
-        sendBroadcast(intent1);
-        //svc_intent = new Intent(this, FetcherService.class);
-        //if (service_status)
-        //stopService(svc_intent);
-
-        */
+        Log.v(TAG,"App destroyed");
         super.onDestroy();
             }
 
     @Override
     public void onLowMemory() {
         Log.e(TAG,"onLowMemory()");
-        //sendQueryBroadcast();
         super.onLowMemory();
     }
 
     @Override
     protected void onPause() {
-        //sendQueryBroadcast();
-        Log.e(TAG,"onPause()");
+        Log.v(TAG,"App paused");
         super.onPause();
     }
 
     @Override
     protected void onResume() {
+        Log.v(TAG,"App resumed");
         super.onResume();
     }
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState, @NonNull PersistableBundle outPersistentState) {
-
-        //sendQueryBroadcast();
         super.onSaveInstanceState(outState, outPersistentState);
     }
 
 
     public static class SettingsFragment extends PreferenceFragmentCompat {
 
-        Context svc_sw_cntxt;
-        Intent svc_intent;
-        SwitchPreference svc_sw_pref;
+        private Context mSvc_sw_cntxt;
+        private Intent mSvc_intent;
         ActivityResultLauncher<Intent> ringtoneSelectActivityLauncher;
 
-
-
-
+        @SuppressWarnings("ConstantConditions")
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey);
             Preference latResPref = findPreference(getString(R.string.latest_result_key));
-            assert latResPref != null;
-            latResPref.setSummary(getLatRes(latResPref.getContext()));
             ListPreference sms_send_pref = findPreference(getString(R.string.send_key));
             Preference signature = findPreference(getString(R.string.signature_key));
-            svc_sw_pref = findPreference(getString(service_status_key));
+            Preference sms_notif_pref = findPreference(getString(R.string.sms_notif_key));
+            SwitchPreference mSvc_sw_pref = findPreference(getString(service_status_key));
+            Preference alertPref = findPreference(getString(R.string.ringtonePref_key));
             Preference logFileSize_pref = findPreference(getString(logFileSize_key));
-            assert logFileSize_pref != null;
+            latResPref.setSummary(getLatRes(latResPref.getContext()));
             logFileSize_pref.setSummary(new DecimalFormat("0000.00").format(getLogFileSize
                     (logFileSize_pref.getContext()))+ "MB"+"    ("+getLogFileSize
                     (logFileSize_pref.getContext())/1024f+" GB)");
-            assert svc_sw_pref != null;
-            svc_sw_cntxt = svc_sw_pref.getContext();
-            svc_sw_pref.callChangeListener(getServiceStatus(svc_sw_cntxt)); //set current status
-            svc_sw_cntxt = svc_sw_pref.getContext().getApplicationContext();
-            svc_intent = new Intent(svc_sw_cntxt.getApplicationContext(),FetcherService.class);
-            Preference sms_notif_pref = findPreference(getString(R.string.sms_notif_key));
-            assert sms_notif_pref != null;
+            mSvc_sw_cntxt = mSvc_sw_pref.getContext();
+            mSvc_sw_pref.callChangeListener(getServiceStatus(mSvc_sw_cntxt)); //set current status
+            mSvc_intent = new Intent(mSvc_sw_cntxt.getApplicationContext(),FetcherService.class);
             sms_notif_pref.setOnPreferenceChangeListener((preference, newValue) -> {
-                set_Debug_sendAction_pref(svc_sw_cntxt, (boolean) newValue, null);
+                set_Debug_sendAction_pref(mSvc_sw_cntxt, (boolean) newValue, null);
                 return true;
             });
-            svc_sw_pref.setOnPreferenceChangeListener((preference, newValue) -> {
+            mSvc_sw_pref.setOnPreferenceChangeListener((preference, newValue) -> {
                 if((boolean) newValue) {
-                    if(svc_sw_cntxt.checkSelfPermission(Manifest.permission.SEND_SMS) ==
+                    if(mSvc_sw_cntxt.checkSelfPermission(Manifest.permission.SEND_SMS) ==
                             PackageManager.PERMISSION_GRANTED )
-                    ContextCompat.startForegroundService(svc_sw_cntxt, svc_intent);
+                    ContextCompat.startForegroundService(mSvc_sw_cntxt, mSvc_intent);
                     else{
-                        Log.e(TAG,"SMS_Permission denied at start service button");
+                        mSvc_sw_pref.setEnabled(false);
                     }
 
                     Log.i(TAG, "Service Start Button Pressed...");
                 }
                 else{
-                    svc_sw_cntxt.stopService(svc_intent);
-                    Log.i(TAG, "Service Stop Button Pressed...");
+                    mSvc_sw_cntxt.stopService(mSvc_intent);
                 }
-
                 return true;
             });
             SharedPreferences sms_notif_sharedPref = sms_notif_pref.getSharedPreferences();
-            assert sms_notif_sharedPref != null;
             boolean val = sms_notif_sharedPref.getBoolean(getString(sms_notif_key), false);
-            set_Debug_sendAction_pref(svc_sw_cntxt,val, null);
-
-            assert sms_send_pref != null;
-            set_Debug_sendAction_pref(svc_sw_cntxt,null,sms_send_pref.getValue()); // redundant operation to be
+            set_Debug_sendAction_pref(mSvc_sw_cntxt,val, null);
+            set_Debug_sendAction_pref(mSvc_sw_cntxt,null,sms_send_pref.getValue()); // redundant operation to be
             //replaced with original keys used by this pref
-
-            assert signature != null;
             SharedPreferences sign_sharedPref = signature.getSharedPreferences();
-            assert sign_sharedPref != null;
             SharedPreferences.Editor sign_editor = sign_sharedPref.edit();
             String sign_val = sign_sharedPref.getString(getString(R.string.signature_key), null);
             if(sign_val == null || sign_val.equals("") || sign_val.equals(" ")){
@@ -306,8 +234,6 @@ public class SettingsActivity extends AppCompatActivity {
                 sign_editor.putString(getString(R.string.signature_key), Parser.getCurrentMsgSign());
                 return true;
             });
-            Preference alertPref = findPreference(getString(R.string.ringtonePref_key));
-            assert alertPref != null;
             Context alertPref_cntxt = alertPref.getContext();
             Ringtone ringtone = null;
             try {
@@ -340,27 +266,25 @@ public class SettingsActivity extends AppCompatActivity {
                             }
                         }
                     });
+            if(!getServiceStatus(mSvc_sw_cntxt))
+                mSvc_sw_pref.setChecked(false);
                 }
 
             @Override
         public void onStart() {
-            if(!getServiceStatus(svc_sw_cntxt))
-            svc_sw_pref.setChecked(false);
             super.onStart();
         }
 
 
         @Override
         public boolean onPreferenceTreeClick(Preference preference) {
-
-           Log.e(TAG," Selected Preference from Tree  >> "+ preference.getKey());
+           Log.i(TAG," Selected Preference from Tree  >> "+ preference.getKey());
            if(preference.getKey().equals(getString(R.string.latest_result_key))){
                String result2bPopulated = getLatRes(preference.getContext());
                preference.setSummary(result2bPopulated);
                ClipboardManager clipboard = (ClipboardManager) preference
                        .getContext().getSystemService(CLIPBOARD_SERVICE);
-               ClipData clip = ClipData.newPlainText("Celestrak Results Copied from " +
-                       TAG, result2bPopulated);
+               ClipData clip = ClipData.newPlainText("Celestrak Results", result2bPopulated);
                clipboard.setPrimaryClip(clip);
            }
            else if(preference.getKey().equals(getString(R.string.ringtonePref_key))){
@@ -371,25 +295,20 @@ public class SettingsActivity extends AppCompatActivity {
                intent.putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE,RingtoneManager.TYPE_RINGTONE);
                ringtoneSelectActivityLauncher.launch(intent);
            }
-            return super.onPreferenceTreeClick(preference);
+
+           return super.onPreferenceTreeClick(preference);
         }
 
         @Override
         public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-            //Log.e("onOptionsItemSelected", item.toString());
+            Log.v(TAG,"OnOptionsItemsSelected() with : " + item);
             return super.onOptionsItemSelected(item);
         }
 
-        @Override
-        public void onPrimaryNavigationFragmentChanged(boolean isPrimaryNavigationFragment) {
-
-            //Log.e("onPrimaryNavigationFragmentChanged", String.valueOf(isPrimaryNavigationFragment));
-            super.onPrimaryNavigationFragmentChanged(isPrimaryNavigationFragment);
-        }
 
         @Override
         public boolean onContextItemSelected(@NonNull MenuItem item) {
-            //Log.e("onContextItemSelected", item.toString());
+            Log.v("onContextItemSelected", item.toString());
             return super.onContextItemSelected(item);
         }
     }
